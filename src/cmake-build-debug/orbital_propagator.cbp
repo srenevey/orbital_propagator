@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6"/>
+	<Project>
+		<Option title="orbital_propagator"/>
+		<Option makefile_is_custom="1"/>
+		<Option compiler="gcc"/>
+		<Option virtualFolders="CMake Files\;"/>
+		<Build>
+			<Target title="all">
+				<Option working_dir="/Users/sylvain/Developer/orbital_propagator/src/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j12 -f &quot;/Users/sylvain/Developer/orbital_propagator/src/cmake-build-debug/Makefile&quot;  VERBOSE=1 all"/>
+					<CompileFile command="/usr/bin/make -j12 -f &quot;/Users/sylvain/Developer/orbital_propagator/src/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j12 -f &quot;/Users/sylvain/Developer/orbital_propagator/src/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j12 -f &quot;/Users/sylvain/Developer/orbital_propagator/src/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="rebuild_cache">
+				<Option working_dir="/Users/sylvain/Developer/orbital_propagator/src/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j12 -f &quot;/Users/sylvain/Developer/orbital_propagator/src/cmake-build-debug/Makefile&quot;  VERBOSE=1 rebuild_cache"/>
+					<CompileFile command="/usr/bin/make -j12 -f &quot;/Users/sylvain/Developer/orbital_propagator/src/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j12 -f &quot;/Users/sylvain/Developer/orbital_propagator/src/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j12 -f &quot;/Users/sylvain/Developer/orbital_propagator/src/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="edit_cache">
+				<Option working_dir="/Users/sylvain/Developer/orbital_propagator/src/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j12 -f &quot;/Users/sylvain/Developer/orbital_propagator/src/cmake-build-debug/Makefile&quot;  VERBOSE=1 edit_cache"/>
+					<CompileFile command="/usr/bin/make -j12 -f &quot;/Users/sylvain/Developer/orbital_propagator/src/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j12 -f &quot;/Users/sylvain/Developer/orbital_propagator/src/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j12 -f &quot;/Users/sylvain/Developer/orbital_propagator/src/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="orbital_propagator">
+				<Option output="/Users/sylvain/Developer/orbital_propagator/src/cmake-build-debug/orbital_propagator" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/Users/sylvain/Developer/orbital_propagator/src/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/Users/sylvain/Developer/orbital_propagator/src/."/>
+					<Add directory="/Users/sylvain/Developer/orbital_propagator/src/../libs"/>
+					<Add directory="/Users/sylvain/Developer/orbital_propagator/src/../libs/boost_1_69_0"/>
+					<Add directory="/Users/sylvain/Developer/orbital_propagator/src/../libs/cspice/include"/>
+					<Add directory="/Users/sylvain/Developer/orbital_propagator/src/../libs/earthGRAM2016/src"/>
+					<Add directory="/Users/sylvain/Developer/orbital_propagator/libs/earthGRAM2016/src"/>
+					<Add directory="/Users/sylvain/Developer/orbital_propagator/libs/cspice/include"/>
+					<Add directory="/Library/Developer/CommandLineTools/usr/include/c++/v1"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/Library/Developer/CommandLineTools/usr/lib/clang/10.0.1/include"/>
+					<Add directory="/Library/Developer/CommandLineTools/usr/include"/>
+					<Add directory="/System/Library/Frameworks"/>
+					<Add directory="/Library/Frameworks"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j12 -f &quot;/Users/sylvain/Developer/orbital_propagator/src/cmake-build-debug/Makefile&quot;  VERBOSE=1 orbital_propagator"/>
+					<CompileFile command="/usr/bin/make -j12 -f &quot;/Users/sylvain/Developer/orbital_propagator/src/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j12 -f &quot;/Users/sylvain/Developer/orbital_propagator/src/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j12 -f &quot;/Users/sylvain/Developer/orbital_propagator/src/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="orbital_propagator/fast">
+				<Option output="/Users/sylvain/Developer/orbital_propagator/src/cmake-build-debug/orbital_propagator" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/Users/sylvain/Developer/orbital_propagator/src/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/Users/sylvain/Developer/orbital_propagator/src/."/>
+					<Add directory="/Users/sylvain/Developer/orbital_propagator/src/../libs"/>
+					<Add directory="/Users/sylvain/Developer/orbital_propagator/src/../libs/boost_1_69_0"/>
+					<Add directory="/Users/sylvain/Developer/orbital_propagator/src/../libs/cspice/include"/>
+					<Add directory="/Users/sylvain/Developer/orbital_propagator/src/../libs/earthGRAM2016/src"/>
+					<Add directory="/Users/sylvain/Developer/orbital_propagator/libs/earthGRAM2016/src"/>
+					<Add directory="/Users/sylvain/Developer/orbital_propagator/libs/cspice/include"/>
+					<Add directory="/Library/Developer/CommandLineTools/usr/include/c++/v1"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/Library/Developer/CommandLineTools/usr/lib/clang/10.0.1/include"/>
+					<Add directory="/Library/Developer/CommandLineTools/usr/include"/>
+					<Add directory="/System/Library/Frameworks"/>
+					<Add directory="/Library/Frameworks"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j12 -f &quot;/Users/sylvain/Developer/orbital_propagator/src/cmake-build-debug/Makefile&quot;  VERBOSE=1 orbital_propagator/fast"/>
+					<CompileFile command="/usr/bin/make -j12 -f &quot;/Users/sylvain/Developer/orbital_propagator/src/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j12 -f &quot;/Users/sylvain/Developer/orbital_propagator/src/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j12 -f &quot;/Users/sylvain/Developer/orbital_propagator/src/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+		</Build>
+		<Unit filename="/Users/sylvain/Developer/orbital_propagator/src/EnvironmentModel.cpp">
+			<Option target="orbital_propagator"/>
+		</Unit>
+		<Unit filename="/Users/sylvain/Developer/orbital_propagator/src/EnvironmentModel.h">
+			<Option target="orbital_propagator"/>
+		</Unit>
+		<Unit filename="/Users/sylvain/Developer/orbital_propagator/src/EqMotion.cpp">
+			<Option target="orbital_propagator"/>
+		</Unit>
+		<Unit filename="/Users/sylvain/Developer/orbital_propagator/src/EqMotion.h">
+			<Option target="orbital_propagator"/>
+		</Unit>
+		<Unit filename="/Users/sylvain/Developer/orbital_propagator/src/Spacecraft.cpp">
+			<Option target="orbital_propagator"/>
+		</Unit>
+		<Unit filename="/Users/sylvain/Developer/orbital_propagator/src/Spacecraft.h">
+			<Option target="orbital_propagator"/>
+		</Unit>
+		<Unit filename="/Users/sylvain/Developer/orbital_propagator/src/constants.h">
+			<Option target="orbital_propagator"/>
+		</Unit>
+		<Unit filename="/Users/sylvain/Developer/orbital_propagator/src/main.cpp">
+			<Option target="orbital_propagator"/>
+		</Unit>
+		<Unit filename="/Users/sylvain/Developer/orbital_propagator/src/perturbations.cpp">
+			<Option target="orbital_propagator"/>
+		</Unit>
+		<Unit filename="/Users/sylvain/Developer/orbital_propagator/src/perturbations.h">
+			<Option target="orbital_propagator"/>
+		</Unit>
+		<Unit filename="/Users/sylvain/Developer/orbital_propagator/src/state_type.h">
+			<Option target="orbital_propagator"/>
+		</Unit>
+		<Unit filename="/Users/sylvain/Developer/orbital_propagator/src/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+	</Project>
+</CodeBlocks_project_file>
