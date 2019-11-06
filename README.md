@@ -11,14 +11,15 @@ The C++ propagator uses the EGM2008 geopotential model, EarthGRAM2016 for the at
 ### Geopotential model
 The EGM2008 model can be downloaded [here](http://earth-info.nga.mil/GandG/wgs84/gravitymod/egm2008/first_release.html). Download the model *Spherical Harmonic Coefficients for Earth's Gravitational Potential - "Tide Free" system* and then extract it. Place the file *EGM2008_to2190_TideFree* into *assets*.
 
-    orbital_propagator
-    └── assets
-    	 	| 	EGM2008_to2190_TideFree
-    |	doc
-    |   libs
-    |  	README.md
-    | 	src
-
+```
+orbital_propagator
+└── assets
+    | 	EGM2008_to2190_TideFree
+|	doc
+|   libs
+|  	README.md
+| 	src
+```
 
 ### Atmosphere model
 EarthGRAM2016 can be requested from the [NASA Software Catalog](https://software.nasa.gov/software/MFS-32780-2). Unzip the archive and place it in the *libs* folder
