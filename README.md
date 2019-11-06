@@ -133,10 +133,10 @@ These kernels will be loaded by SPICE through a meta-kernel. The following conte
        PATH_SYMBOLS    = ( 'ROOT' )
     
        KERNELS_TO_LOAD = ( '$ROOT/assets/kernels/de430.bsp',
-       '$ROOT/assets/kernels/earth_latest_high_prec.bpc',
-       '$ROOT/assets/kernels/gm_de431.tpc',
-       '$ROOT/assets/kernels/naif0012.tls',
-       '$ROOT/assets/kernels/pck00010.tpc')
+            '$ROOT/assets/kernels/earth_latest_high_prec.bpc',
+                '$ROOT/assets/kernels/gm_de431.tpc',
+                    '$ROOT/assets/kernels/naif0012.tls',
+                        '$ROOT/assets/kernels/pck00010.tpc')
      
        \begintext
 
