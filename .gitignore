@@ -3,3 +3,4 @@ assets/*
 libs/*
 doc/html/
 doc/latex/
+src/cmake-build-debug
