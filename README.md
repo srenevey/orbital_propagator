@@ -14,7 +14,7 @@ The EGM2008 model can be downloaded [here](http://earth-info.nga.mil/GandG/wgs84
     orbital_propagator
     └── assets
     	 	| 	EGM2008_to2190_TideFree
-    |		doc
+    |	doc
     |   libs
     |  	README.md
     | 	src
@@ -26,7 +26,7 @@ EarthGRAM2016 can be requested from the [NASA Software Catalog](https://software
     orbital_propagator
     └── assets
     	 	| 	EGM2008_to2190_TideFree 	
-    |		doc
+    |	doc
     └── libs
     		| 	EarthGRAM2016
     |  	README.md
@@ -113,7 +113,7 @@ These kernels should be placed in a *kernels* folder inside the *assets* directo
             |  	gm_de431.tpc
             |  	naif0012.tls
             |  	pck00010.tpc
-    |		doc
+    |	doc
     └── libs
     		| 	EarthGRAM2016
     |  	README.md
@@ -128,10 +128,10 @@ These kernels will be loaded by SPICE through a meta-kernel. The following conte
        PATH_SYMBOLS    = ( 'ROOT' )
     
        KERNELS_TO_LOAD = ( '$ROOT/assets/kernels/de430.bsp',
-       										 '$ROOT/assets/kernels/earth_latest_high_prec.bpc',
-       										 '$ROOT/assets/kernels/gm_de431.tpc',
-       										 '$ROOT/assets/kernels/naif0012.tls',
-       										 '$ROOT/assets/kernels/pck00010.tpc')
+       					   '$ROOT/assets/kernels/earth_latest_high_prec.bpc',
+       					   '$ROOT/assets/kernels/gm_de431.tpc',
+       					   '$ROOT/assets/kernels/naif0012.tls',
+       					   '$ROOT/assets/kernels/pck00010.tpc')
      
        \begintext
 
