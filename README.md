@@ -14,24 +14,26 @@ The EGM2008 model can be downloaded [here](http://earth-info.nga.mil/GandG/wgs84
 ```
 orbital_propagator
 └── assets
-    | 	EGM2008_to2190_TideFree
-|	doc
+    |   EGM2008_to2190_TideFree
+|   doc
 |   libs
 |  	README.md
-| 	src
+|   src
 ```
 
 ### Atmosphere model
 EarthGRAM2016 can be requested from the [NASA Software Catalog](https://software.nasa.gov/software/MFS-32780-2). Unzip the archive and place it in the *libs* folder
 
-    orbital_propagator
-    └── assets
-    	 	| 	EGM2008_to2190_TideFree 	
-    |	doc
-    └── libs
-    		| 	EarthGRAM2016
-    |  	README.md
-    | 	src
+```
+orbital_propagator
+└── assets
+    |   EGM2008_to2190_TideFree 	
+|   doc
+└── libs
+    |   EarthGRAM2016
+|   README.md
+|   src
+```
 
 Copy the file NameRef_Linux.txt from IOfiles into EarthGRAM2016 and rename it to NameRef.txt. Open NameRef.txt and modifiy as follows:
 
@@ -105,20 +107,22 @@ The high precision propagator uses JPL's ephemerides to retrieve the planet's po
 
 These kernels should be placed in a *kernels* folder inside the *assets* directory.
 
-    orbital_propagator
-    └── assets
-    	 	| 	EGM2008_to2190_TideFree 
-        └── kernels
-        		|		de430.bsp
-        		|		earth_latest_high_prec.bpc
-            |  	gm_de431.tpc
-            |  	naif0012.tls
-            |  	pck00010.tpc
-    |	doc
-    └── libs
-    		| 	EarthGRAM2016
-    |  	README.md
-    |		src
+```
+orbital_propagator
+└── assets
+    |   EGM2008_to2190_TideFree 
+└── kernels
+    |   de430.bsp
+    |   earth_latest_high_prec.bpc
+    |   gm_de431.tpc
+    |   naif0012.tls
+    |   pck00010.tpc
+|   doc
+└── libs
+    |   EarthGRAM2016
+|   README.md
+|   src
+```
 
 These kernels will be loaded by SPICE through a meta-kernel. The following content should be put in a file named *kernels.tm* and placed in the *assets* folder. Modify <ABSOLUTE_PATH_TO_PROJECT_ROOT> to reflect your project's root directory path:
 
