@@ -320,7 +320,7 @@ namespace perturbations {
         double p_sr = (constants::kSolarPressure * 1E-3) * constants::kAstronomicalUnit / r_sun2sc.norm(); // kg / (km s^2)
         double reflectivity = sc.getReflectivity();
         double area = sc.getSunExposedArea() * 1E-6; // transform from m^2 to km^2
-        a_srp = - nu * p_sr * (1 + reflectivity) * area / sc.getMass() * r_sun2sc / r_sun2sc.norm();
+        a_srp = - nu * p_sr * (1 + reflectivity) * area / sc.getMass() * r_sun2sc / r_sun2sc.norm() * 1E-3;
 
         return a_srp;
     }
