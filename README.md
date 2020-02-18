@@ -17,7 +17,7 @@ orbital_propagator
     |   EGM2008_to2190_TideFree
 |   doc
 |   libs
-|  	README.md
+|   README.md
 |   src
 ```
 
