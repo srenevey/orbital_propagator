@@ -1,4 +1,4 @@
-This orbital propagator computes the trajectory of a spacecraft in the two-body probelm with perturbations from atmospheric drag (exponentional model or EarthGRAM), geopotential perturbations, third-body effects, and solar radiation pressure. An example is provided in main.cpp and the documentation can be built by running `doxygen` from `doc`.
+This orbital propagator computes the trajectory of a spacecraft in the two-body problem with perturbations from atmospheric drag (exponentional model or EarthGRAM), geopotential perturbations, third-body effects, and solar radiation pressure. An example is provided in main.cpp and the documentation can be built by running `doxygen` from `doc`.
 
 Note: the propagator has not been validated. The output might be inaccurate / incorrect.
 
