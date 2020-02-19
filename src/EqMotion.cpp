@@ -15,27 +15,27 @@ void EqMotion::operator()( const state_type &x , state_type &dxdt , double t ) {
 
 	// Two-body acceleration
     double r = state.head(3).norm();
-    Eigen::Vector3d a_kepler = - env_model_.getMu() / pow(r, 3) * state.head(3);
+    Eigen::Vector3d a_kepler = - env_model_.mu() / pow(r, 3) * state.head(3);
 
 
     // Perturbations
     Eigen::Vector3d a_geopot(0.0, 0.0, 0.0);
-    if (env_model_.getGp_degree() > 1) {
+    if (env_model_.gp_degree() > 1) {
         a_geopot = perturbations::geopotential(state, et, env_model_);
     }
 
     Eigen::Vector3d a_nbody(0.0, 0.0, 0.0);
-    if (env_model_.isThird_body_flag()) {
+    if (env_model_.is_third_body_flag()) {
         a_nbody = perturbations::nbody(state, et, env_model_);
     }
 
     Eigen::Vector3d a_drag(0.0, 0.0, 0.0);
-    if (env_model_.isDrag_flag() && spacecraft_.getMass() != 0.0) {
+    if (env_model_.is_drag_flag() && spacecraft_.mass() != 0.0) {
         a_drag = perturbations::drag(spacecraft_, state, et, t, env_model_);
     }
 
     Eigen::Vector3d a_srp(0.0, 0.0, 0.0);
-    if (env_model_.isSRP_flag()) {
+    if (env_model_.is_srp_flag()) {
         a_srp = perturbations::solar_radiation_pressure(state, et, env_model_, spacecraft_);
     }
 

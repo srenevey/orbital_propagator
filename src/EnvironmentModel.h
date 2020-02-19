@@ -67,14 +67,14 @@ public:
             std::string epoch = "");
     virtual ~EnvironmentModel();
 
-    double getMu() const;
-    std::string getCentral_body() const;
-    std::array<int, 10> getThird_body_flags() const;
-    bool isThird_body_flag() const;
-    int getGp_degree() const;
-    const Eigen::MatrixXd &getCS_coeffs() const;
-    bool isDrag_flag() const;
-    bool isSRP_flag() const;
+    double mu() const;
+    std::string central_body() const;
+    std::array<int, 10> third_body_flags() const;
+    bool is_third_body_flag() const;
+    int gp_degree() const;
+    const Eigen::MatrixXd &cs_coeffs() const;
+    bool is_drag_flag() const;
+    bool is_srp_flag() const;
 
 
     /*! \fn void getAtm_parameters(const SpiceDouble& inertial_position, double& density, double elapsed_time, SpiceDouble et) const
@@ -85,7 +85,7 @@ public:
      *  \param elapsed_time         Time elapsed since the beginning of the integration (sec)
      *  \param et                   Ephemeris time.
      */
-    void getAtm_parameters(const SpiceDouble* inertial_position, double& density, double elapsed_time, SpiceDouble et) const;
+    void get_atm_parameters(const SpiceDouble* inertial_position, double& density, double elapsed_time, SpiceDouble et) const;
 
 
     /*! \fn void print_parameters() const;

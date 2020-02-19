@@ -20,22 +20,22 @@ Spacecraft::Spacecraft(double mass, double drag_coefficient, double reference_ar
     sun_exposed_area_(sun_exposed_area)
 {}
 
-double Spacecraft::getMass() const {
+double Spacecraft::mass() const {
     return mass_;
 }
 
-double Spacecraft::getDragCoefficient() const {
+double Spacecraft::drag_coefficient() const {
     return drag_coefficient_;
 }
 
-double Spacecraft::getReferenceArea() const {
+double Spacecraft::reference_area() const {
     return reference_area_;
 }
 
-double Spacecraft::getReflectivity() const {
+double Spacecraft::reflectivity() const {
     return reflectivity_;
 }
 
-double Spacecraft::getSunExposedArea() const {
+double Spacecraft::sun_exposed_area() const {
     return sun_exposed_area_;
 }

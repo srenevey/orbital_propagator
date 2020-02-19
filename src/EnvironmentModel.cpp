@@ -61,41 +61,41 @@ EnvironmentModel::~EnvironmentModel() {
 }
 
 
-double EnvironmentModel::getMu() const {
+double EnvironmentModel::mu() const {
     return mu_;
 }
 
 
-std::array<int, 10> EnvironmentModel::getThird_body_flags() const {
+std::array<int, 10> EnvironmentModel::third_body_flags() const {
     return third_body_flags_;
 }
 
 
-bool EnvironmentModel::isThird_body_flag() const {
+bool EnvironmentModel::is_third_body_flag() const {
     return third_body_flag_;
 }
 
 
-int EnvironmentModel::getGp_degree() const {
+int EnvironmentModel::gp_degree() const {
     return gp_degree_;
 }
 
 
-const Eigen::MatrixXd &EnvironmentModel::getCS_coeffs() const {
+const Eigen::MatrixXd &EnvironmentModel::cs_coeffs() const {
     return CS_coeffs_;
 }
 
 
-std::string EnvironmentModel::getCentral_body() const {
+std::string EnvironmentModel::central_body() const {
     return central_body_;
 }
 
 
-bool EnvironmentModel::isDrag_flag() const {
+bool EnvironmentModel::is_drag_flag() const {
     return drag_flag_;
 }
 
-bool EnvironmentModel::isSRP_flag() const {
+bool EnvironmentModel::is_srp_flag() const {
     return srp_flag_;
 }
 
@@ -134,14 +134,14 @@ Eigen::MatrixXd EnvironmentModel::load_coefficients(int degree, std::string mode
 
         data_file.close();
     } else {
-    	std::cout << "Error opening the file containing the geopotential coefficients." << std::endl;
+    	std::cerr << "Error opening the file containing the geopotential coefficients." << std::endl;
     }
 
     return coefficients;
 }
 
 // void EnvironmentModel::getAtm_parameters(const Eigen::Ref<const Eigen::VectorXd>& state, double& density, double elapsed_time, SpiceDouble et) const {
-void EnvironmentModel::getAtm_parameters(const SpiceDouble *inertial_position, double& density, double elapsed_time, SpiceDouble et) const {
+void EnvironmentModel::get_atm_parameters(const SpiceDouble *inertial_position, double& density, double elapsed_time, SpiceDouble et) const {
 
     if (atm_model_ == "EarthGRAM") {
 
@@ -188,8 +188,8 @@ void EnvironmentModel::getAtm_parameters(const SpiceDouble *inertial_position, d
 		SpiceDouble radius[3];
 		bodvrd_c("EARTH", "RADII", 3, &dim, radius);
 
+		// Compute the altitude above the ellipsoid. There is no atmosphere above 1100 km.
         double h_ell = vnorm_c(inertial_position) - radius[0];
-
         if (h_ell <= 1100.0) {
             for (int i = 0; i < 28; ++i) {
                 if (exp_atm_model_[i][0] <= h_ell && exp_atm_model_[i][1] > h_ell) {

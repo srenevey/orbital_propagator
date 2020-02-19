@@ -31,30 +31,30 @@ public:
      */
     Spacecraft(double mass, double drag_coefficient, double reference_area, double reflectivity, double sun_exposed_area);
 
-    /*! \fn double getMass() const
+    /*! \fn double mass() const
      *  \brief Return the mass of the spacecraft.
      */
-    double getMass() const;
+    double mass() const;
 
-    /*! \fn double getDragCoefficient() const
+    /*! \fn double drag_coefficient() const
      *  \brief Return the drag coefficient of the spacecraft.
      */
-    double getDragCoefficient() const;
+    double drag_coefficient() const;
 
-    /*! \fn double getReferenceArea() const
+    /*! \fn double reference_area() const
      *  \brief Return the reference area of the spacecraft.
      */
-    double getReferenceArea() const;
+    double reference_area() const;
 
-    /*! \fn double getReflectivity() const
+    /*! \fn double reflectivity() const
      * \brief Return the reflectivity of the spacecraft.
      */
-    double getReflectivity() const;
+    double reflectivity() const;
 
-    /*! \fn double getSunExposedArea() const
+    /*! \fn double sun_exposed_area() const
      *  \brief Return the area of the spacecraft which is exposed to the Sun.
      */
-    double getSunExposedArea() const;
+    double sun_exposed_area() const;
 };
 
 

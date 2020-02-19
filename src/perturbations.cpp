@@ -16,7 +16,7 @@ namespace perturbations {
             inertial_position[i] = state[i];
             //inertial_velocity[i + 3] = state[i + 3];
         }
-        env_model.getAtm_parameters(inertial_position, density, elapsed_time, et);
+        env_model.get_atm_parameters(inertial_position, density, elapsed_time, et);
         density = density * 1E9; // transform from kg/m^3 to kg/km^3
 
         // Compute the relative velocity
@@ -25,9 +25,9 @@ namespace perturbations {
         Eigen::Vector3d v = state.tail(3);        
         Eigen::Vector3d v_rel = v - earth_ang_vel.cross(r);
 
-        double cd = sc.getDragCoefficient();
-        double reference_area = sc.getReferenceArea() * 1E-6; // transform from m^2 to km^2
-        double mass = sc.getMass();
+        double cd = sc.drag_coefficient();
+        double reference_area = sc.reference_area() * 1E-6; // transform from m^2 to km^2
+        double mass = sc.mass();
         Eigen::Vector3d a_drag = - 0.5 * cd * reference_area / mass * density * v_rel.norm() * v_rel;
 
         return a_drag;
@@ -53,13 +53,13 @@ namespace perturbations {
 
 
         // Lambda expressions used as helpers to get C and S coefficients
-        Eigen::MatrixXd CS_coeffs = env_model.getCS_coeffs();
+        Eigen::MatrixXd CS_coeffs = env_model.cs_coeffs();
         auto C = [&](int m, int n) { return CS_coeffs(index(m, n), 0); };
         auto S = [&](int m, int n) { return CS_coeffs(index(m, n), 1); };
 
 
         // Compute V and W coefficients
-        int degree = env_model.getGp_degree();
+        int degree = env_model.gp_degree();
         int num_rows = (degree + 2) * (degree + 3) / 2;
         double r = vnorm_c(ecef_position);
         Eigen::MatrixXd VW_coeffs = Eigen::MatrixXd::Zero(num_rows, 2);
@@ -159,8 +159,8 @@ namespace perturbations {
 
     Eigen::Vector3d nbody(const Eigen::Ref<const Eigen::VectorXd>& state, SpiceDouble et, const EnvironmentModel &env_model) {
 
-        std::string central_body = env_model.getCentral_body();
-        std::array<int,10> third_body_flags = env_model.getThird_body_flags();
+        std::string central_body = env_model.central_body();
+        std::array<int,10> third_body_flags = env_model.third_body_flags();
 
         // Compute perturbations due to each body
         Eigen::Vector3d a_sun(0.0, 0.0, 0.0);
@@ -276,7 +276,7 @@ namespace perturbations {
 
     Eigen::Vector3d solar_radiation_pressure(const Eigen::Ref<const Eigen::VectorXd>& state, SpiceDouble et, const EnvironmentModel &env_model, const Spacecraft &sc) {
         Eigen::Vector3d a_srp(0.0, 0.0, 0.0);
-        std::string central_body = env_model.getCentral_body();
+        std::string central_body = env_model.central_body();
 
         // Get vector from spacecraft to the Sun
         Eigen::Vector3d r_sun2sc(0.0, 0.0, 0.0);
@@ -318,9 +318,9 @@ namespace perturbations {
 
         // Compute acceleration
         double p_sr = (constants::kSolarPressure * 1E-3) * constants::kAstronomicalUnit / r_sun2sc.norm(); // kg / (km s^2)
-        double reflectivity = sc.getReflectivity();
-        double area = sc.getSunExposedArea() * 1E-6; // transform from m^2 to km^2
-        a_srp = - nu * p_sr * (1 + reflectivity) * area / sc.getMass() * r_sun2sc / r_sun2sc.norm() * 1E-3;
+        double reflectivity = sc.reflectivity();
+        double area = sc.sun_exposed_area() * 1E-6; // transform from m^2 to km^2
+        a_srp = - nu * p_sr * (1 + reflectivity) * area / sc.mass() * r_sun2sc / r_sun2sc.norm() * 1E-3;
 
         return a_srp;
     }
