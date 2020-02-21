@@ -181,8 +181,6 @@ set(ORBITAL_PROPAGATOR_SRCS
         EqMotion.cpp
         EqMotion.h
         main.cpp
-        perturbations.cpp
-        perturbations.h
         Spacecraft.cpp
         Spacecraft.h
         state_type.h

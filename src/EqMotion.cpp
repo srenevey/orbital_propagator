@@ -21,22 +21,22 @@ void EqMotion::operator()( const state_type &x , state_type &dxdt , double t ) {
     // Perturbations
     Eigen::Vector3d a_geopot(0.0, 0.0, 0.0);
     if (env_model_.gp_degree() > 1) {
-        a_geopot = perturbations::geopotential(state, et, env_model_);
+        a_geopot = env_model_.geopotential(state, et);
     }
 
     Eigen::Vector3d a_nbody(0.0, 0.0, 0.0);
     if (env_model_.is_third_body_flag()) {
-        a_nbody = perturbations::nbody(state, et, env_model_);
+        a_nbody = env_model_.nbody(state, et);
     }
 
     Eigen::Vector3d a_drag(0.0, 0.0, 0.0);
     if (env_model_.is_drag_flag() && spacecraft_.mass() != 0.0) {
-        a_drag = perturbations::drag(spacecraft_, state, et, t, env_model_);
+        a_drag = env_model_.drag(spacecraft_, state, et, t);
     }
 
     Eigen::Vector3d a_srp(0.0, 0.0, 0.0);
     if (env_model_.is_srp_flag()) {
-        a_srp = perturbations::solar_radiation_pressure(state, et, env_model_, spacecraft_);
+        a_srp = env_model_.solar_radiation_pressure(state, et, spacecraft_);
     }
 
     Eigen::Vector3d a_total = a_kepler + a_geopot + a_nbody + a_drag + a_srp;
