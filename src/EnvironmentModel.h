@@ -15,160 +15,114 @@
 #include <numeric>
 #include <iterator>
 #include <iostream>
+#include <vector>
 #include "constants.h"
+#include "AtmModel.h"
+#include "State.h"
 #include "Atmod1.h"
-#include "Spacecraft.h"
+#include "Body.h"
 
 extern "C" {
     #include "SpiceUsr.h"
 };
 
-/*! \class EnvironmentModel
-    \brief This class represents the environment model used for the simulation.
 
-    Acceleration perturbations due to several disturbing effects can be turned on and off.
-*/
+/** Environment model used for the simulation. */
 class EnvironmentModel {
-
-protected:
-    double              mu_;                       /*!< Gravitational parameter of the central body. */
-    std::string         central_body_;             /*!< String containing the name of the central body. */
-    std::array<int,10>  third_body_flags_;         /*!< Array of flags indicating if the perturbation due to a third body is active. */
-    bool                third_body_flag_;          /*!< Flag indicating if the perturbations due to a third body are active. */
-    int                 gp_degree_;                /*!< Degree of expansion of the Earth geopotential. 0 if not set */
-    Eigen::MatrixXd     CS_coeffs_;                /*!< Matrix containing the C and S normalized coefficients used to compute the geopotential effect. */
-    bool                drag_flag_;                /*!< Flag indicating if the perturbations due to drag are active. */
-    std::string         atm_model_;                /*!< String containing the name of the atmospheric model to be used. Current options are exp (default) and EarthGRAM. */
-    Atm1*               earth_gram_atm_model_;     /*!< Pointer to an instance of EarthGRAM 2016 model's Atm1 object. */
-    double              exp_atm_model_[28][4];     /*!< Array containing the exponential atmospheric model */
-    bool                srp_flag_;                 /*!< Flag indicating if the perturbations due to solar pressure radiation are active. */
+    BodyContainer* m_central_body; /*!< String containing the name of the central body. */
+    int m_gp_degree; /*!< Degree of expansion of the Earth geopotential. 0 if not set */
+    Eigen::MatrixXd m_cs_coeffs; /*!< Matrix containing the C and S normalized coefficients used to compute the geopotential effect. */
+    std::vector<BodyContainer*> m_third_body; /*!< Vector containing the celestial bodies accounted for in the computation of third body perturbations. */
+    AtmModel m_atm_model; /*!< String containing the name of the atmospheric model to be used. Current options are exp (default) and EarthGRAM. */
+    Atm1* m_earth_gram_atm_model; /*!< Pointer to an instance of EarthGRAM 2016 model's Atm1 object. */
+    double m_exp_atm_model[28][4]; /*!< Array containing the exponential atmospheric model */
+    bool m_srp_flag; /*!< Flag indicating if the perturbations due to solar pressure radiation are active. */
 
 public:
     EnvironmentModel();
 
-    /*! \fn explicit EnvironmentModel(std::string earthgram_path, std::string central_body, int gp_degree = 0, std::string geopot_model_path = "", std::array<int, 10> third_body_flags = std::array<int, 10> {0,0,0,0,0,0,0,0,0,0}, bool drag_flag = false, std::string atm_model = "exp", bool srp_flag = false, std::string epoch = "")
-     *
-     * @param earthgram_path        String containing the path to EarthGRAM model
-     * @param central_body          Name of the central body
+    /**
+     * @param central_body          Body the spacecraft is orbiting
      * @param gp_degree             Degree of expansion of the geopotential
      * @param geopot_model_path     Path to the geopotential model
-     * @param third_body_flags      Flags indicating which third body are accounted for
-     * @param drag_flag             Flag indicating if the drag is accounted for
-     * @param atm_model             Atmospheric model used for drag computation. Can be "exp" or "EarthGRAM"
+     * @param third_body            List of bodies that are accounted for
+     * @param atm_model             Atmospheric model used for drag computation
+     * @param earthgram_path        Path to EarthGRAM 2016
      * @param srp_flag              Flag indicating if the solar radiation pressure is accounted for
      * @param epoch                 Initial epoch with format "YYYY-MM-DD hh:mm:ss"
      */
     explicit EnvironmentModel(
-            std::string earthgram_path,
-            std::string central_body,
+            Body central_body,
             int gp_degree = 0,
-            std::string geopot_model_path = "",
-            std::array<int, 10> third_body_flags = std::array<int, 10> {0,0,0,0,0,0,0,0,0,0},
-            bool drag_flag = false,
-            std::string atm_model = "exp",
+            const std::string& geopot_model_path = "",
+            const std::vector<Body>& third_body = std::vector<Body> {},
+            AtmModel atm_model = AtmModel::None,
+            const std::string& earthgram_path = "",
             bool srp_flag = false,
-            std::string epoch = "");
+            const std::string& epoch = "");
     virtual ~EnvironmentModel();
 
-    double mu() const;
-    std::string central_body() const;
-    std::array<int, 10> third_body_flags() const;
-    bool is_third_body_flag() const;
-    int gp_degree() const;
-    const Eigen::MatrixXd &cs_coeffs() const;
-    bool is_drag_flag() const;
-    bool is_srp_flag() const;
+    [[nodiscard]] BodyContainer* central_body() const;
+    [[nodiscard]] std::vector<BodyContainer*> third_body() const;
+    [[nodiscard]] int gp_degree() const;
+    [[nodiscard]] const Eigen::MatrixXd &cs_coeffs() const;
+    [[nodiscard]] bool is_drag() const;
+    [[nodiscard]] bool is_srp_flag() const;
 
 
-    /*! \fn void getAtm_parameters(const SpiceDouble& inertial_position, double& density, double elapsed_time, SpiceDouble et) const
-     *  \brief Retrieve the atmosphere density from the model (kg/m<sup>3</sup>).
+    /** Retrieves the density from the atmosphere model specified in the EnvironmentModel.
      *
-     *  \param inertial_position    Inertial position of the spacecraft.
-     *  \param density              Variable where the density will be stored. Units are kg/m<sup>3</sup>.
-     *  \param elapsed_time         Time elapsed since the beginning of the integration (sec)
-     *  \param et                   Ephemeris time.
+     *  @param state                State vector of the spacecraft.
+     *  @param elapsed_time         Time elapsed since the beginning of the integration (sec)
+     *  @param et                   Ephemeris time.
+     *  @return                     Atmosphere density in kg/km<sup>3</sup>.
      */
-    void get_atm_parameters(const SpiceDouble* inertial_position, double& density, double elapsed_time, SpiceDouble et) const;
+    [[nodiscard]] double atm_density(const State& state, double elapsed_time, SpiceDouble et) const;
 
-
-    /*! \fn void print_parameters() const;
-     *  \brief Display the parameters of the environment model.
+    /** Computes the V and W coefficients required to compute the acceleration.
+     *
+     *  @param state        State vector of the spacecraft.
+     *  @param et           Ephemeris time.
      */
-    void print_parameters() const;
+    [[nodiscard]] Eigen::MatrixXd geopotential_harmonic_coeff(const State& state, SpiceDouble et) const;
 
-
-    /*! \fn Eigen::Vector3d drag(const Spacecraft &sc, const Eigen::Ref<const Eigen::VectorXd>& state, SpiceDouble et, double elapsed_time, const EnvironmentModel &env_model)
-     *  \brief Compute the perturbations induced by the drag.
+    /** Computes the position from the central body to the third body.
      *
-     * This function computes the perturbations produced by the atmospheric drag. Based on the settings of the environment model, the atmospheric density
-     * is retrieved either from an exponential model or from EarthGRAM2016.
-     *
-     *  \param sc				Instance of the Spacecraft object containing the properties of the spacecraft.
-     *  \param state			State vector of the spacecraft expressed in the J2000 frame (ECI).
-     *  \param et				Ephemeris time.
-     *  \param elapsed_time     Time elapsed since the beginning of the integration (sec).
+     *  @param body         Third body.
+     *  @param et			Ephemeris time.
      */
-    Eigen::Vector3d drag(const Spacecraft &sc, const Eigen::Ref<const Eigen::VectorXd>& state, SpiceDouble et, double elapsed_time) const;
+    Eigen::Vector3d body_vector(const BodyContainer* body, SpiceDouble et) const;
 
-
-
-    /*! \fn Eigen::Vector3d geopotential(const Eigen::Ref<const Eigen::VectorXd>& state, SpiceDouble et, const EnvironmentModel &env_model)
-     *  \brief Compute the gravitational perturbation induced by the nonspherical geopotential.
+    /** Computes the vector from the sun to the spacecraft in the J2000 or ECLIPJ2000 reference frame.
      *
-     * This function computes the perturbations produced by the nonspherical geopotential.
-     * The algorithm described in Montenbruck, O., Gill, E.,
-     * <em>Satellites Orbits</em>, Springer-Verlag Berlin Heidelberg, 2000, is used. This method uses the EGM2008 model.
-     *
-     *  \param state        State vector of the spacecraft expressed in the J2000 frame (ECI).
-     *  \param et           Ephemeris time.
+     *  @param state        State vector of the spacecraft.
+     *  @param et			Ephemeris time.
      */
-    Eigen::Vector3d geopotential(const Eigen::Ref<const Eigen::VectorXd>& state, SpiceDouble et) const;
+    [[nodiscard]] Eigen::Vector3d sun_spacecraft_vector(const State& state, SpiceDouble et) const;
 
 
-    /*! \fn Eigen::Vector3d nbody(const Eigen::Ref<const Eigen::VectorXd>& state, SpiceDouble et, const EnvironmentModel &env_model)
-     *  \brief Compute the gravitational perturbations produced by celestial bodies.
+    /** Computes the shadow condition on the spacecraft.
      *
-     * This function computes the perturbations produced by all other planets and/or moons taken into account.
-     * The algorithm is taken from Vallado, D.A., <em>Fundamentals of Astrodynamics and Applications</em>, Fourth Edition, Space Technology Library, 2013.
-     *
-     *  \param state        State vector of the spacecraft expressed in the J2000 or Ecliptic J2000 frame.
-     *  \param et			Ephemeris time
-     *
-     *  \return Acceleration resulting from the third-body perturbations expressed in the J2000
-     *  frame if the central body is the Earth and in the Ecliptic J2000 otherwise.
+     *  @param state        State vector of the spacecraft.
+     *  @param et			Ephemeris time.
+     *  @return             Decimal number with value 0 if no shadow, 1 if in umbra, and between 0 and 1 if in penumbra.
      */
-    Eigen::Vector3d nbody(const Eigen::Ref<const Eigen::VectorXd>& state, SpiceDouble et) const;
+    [[nodiscard]] double in_shadow(const State& state, SpiceDouble et) const;
 
 
-    /*! \fn Eigen::Vector3d solar_radiation_pressure(const Eigen::Ref<const Eigen::VectorXd>& state, SpiceDouble et, const EnvironmentModel &env_model, const Spacecraft &sc)
-     *  \brief Compute the perturbations induced by the solar radiation pressure.
+    /** Computes the Earth magnetic field at the given position. The computation is based on a dipole model.
      *
-     * This function computes the orbital perturbations induced by the solar radiation pressure. It is assumed that the
-     * surface normal points in the direction of the Sun.
-     *
-     *  \param state			State vector of the spacecraft expressed in the J2000 or Ecliptic J2000 frame.
-     *  \param et				Ephemeris time.
-     *  \param sc				Instance of the Spacecraft object containing the properties of the spacecraft.
+     *  @param state        State vector of the spacecraft.
+     *  @param et			Ephemeris time.
+     *  @return             Local magnetic field vector expressed in the J2000 reference frame (in Tesla).
      */
-    Eigen::Vector3d solar_radiation_pressure(const Eigen::Ref<const Eigen::VectorXd>& state, SpiceDouble et, const Spacecraft &sc) const;
+    [[nodiscard]] Eigen::Vector3d magnetic_field(const State& state, SpiceDouble et) const;
 
 private:
     Eigen::MatrixXd load_coefficients(int degree, std::string model_file_name);
     void init_exp_model();
-
-    /*! \fn Eigen::Vector3d perturbation_from_body(const Eigen::Ref<const Eigen::VectorXd>& state, const std::string& third_body, const std::string& central_body, SpiceDouble et)
-     *  \brief Compute the perturbation induced by a single body.
-     *
-     *  This function computes the perturbing acceleration produced by a single body on the spacecraft at a given date.
-     *  JPL's ephemerides are used to retrieve the body's state vector.
-     *
-     *  \param state        State vector of the spacecraft expressed in the J2000 or Ecliptic J2000 frame.
-     *  \param third_body   Name of the perturbing body.
-     *  \param central_body Celestial body to which the spacecraft is bound.
-     *  \param et			Ephemeris time.
-     */
-    Eigen::Vector3d perturbation_from_body(const Eigen::Ref<const Eigen::VectorXd>& state, const std::string& third_body, const std::string& central_body, SpiceDouble et) const;
 };
+
 
 
 #endif //PROPAGATION_ENVIRONMENTMODEL_H

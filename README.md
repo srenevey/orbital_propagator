@@ -1,8 +1,6 @@
-This orbital propagator computes the trajectory of a spacecraft in the two-body problem with perturbations from atmospheric drag (exponentional model or EarthGRAM), geopotential perturbations, third-body effects, and solar radiation pressure. An example is provided in main.cpp and the documentation can be built by running `doxygen` from `doc`.
+This orbital propagator computes the trajectory and attitude of a spacecraft subject to various orbital perturbations. Currently supported are atmospheric drag (exponentional model or EarthGRAM), geopotential perturbations, third-body effects, solar radiation pressure, and magnetic perturbations. An example is provided in main.cpp and the documentation can be built by running `doxygen` from `doc`.
 
-Note: the propagator has not been validated. The output might be inaccurate / incorrect.
-
-
+Note: the propagator is still a work in progress and has not been validated yet. The output might be inaccurate / incorrect.
 
 ## Downloading the required models
 
@@ -144,17 +142,17 @@ These kernels will be loaded by SPICE through a meta-kernel. The following conte
 
 ## Compilation
 
-The orbital propagator is based on Eigen, boost and CSPICE. These libraries should be downloaded and installed before compiling the orbital propagator. An example of CMakeLists.txt file is shown below, assuming that the libraries are located in *orbital_propagator/libs*:
+The orbital propagator is based on Eigen, boost and CSPICE. These libraries should be downloaded and installed before compiling the orbital propagator. An example of CMakeLists.txt file is shown below, assuming that the libraries are located in `/usr/local/` and `orbital_propagator/libs`:
 
 ```cmake
 cmake_minimum_required(VERSION 3.14)
 project(orbital_propagator)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 
 set(PROJECT_SOURCE_DIR "<ORBITAL_PROPAGATOR_ROOT_DIR>")
 
-include_directories(. ../libs ../libs/boost_1_69_0 ../libs/cspice/include ../libs/earthGRAM2016/src)
+include_directories(. /usr/local/boost_1_72_0 /usr/local/eigen-3.3.7 ../libs/cspice/include ../libs/earthGRAM2016/src)
 
 add_library(libearthGRAM2016 STATIC IMPORTED)
 set_target_properties(libearthGRAM2016 PROPERTIES
@@ -183,8 +181,34 @@ set(ORBITAL_PROPAGATOR_SRCS
         main.cpp
         Spacecraft.cpp
         Spacecraft.h
-        state_type.h
-        )
+        Body.cpp
+        Body.h
+        State.cpp
+        State.h
+        ReferenceFrame.h
+        Integrator.cpp
+        Integrator.h
+        Sim.cpp
+        Sim.h
+        dimensions/Distance.h
+        dimensions/Velocity.h
+        dimensions/Dimensions.h
+        dimensions/BaseDimension.h
+        dimensions/BaseDimension.cpp
+        dimensions/Distance.cpp
+        dimensions/Velocity.cpp
+        dimensions/AngularVelocity.cpp
+        dimensions/AngularVelocity.h
+        dimensions/Time.h
+        dimensions/Time.cpp
+        dimensions/Area.cpp
+        dimensions/Area.h
+        Quaternion.cpp
+        Quaternion.h
+        Sensor.h
+        Magnetometer.cpp
+        Magnetometer.h
+        AtmModel.h)
 
 add_executable(orbital_propagator ${ORBITAL_PROPAGATOR_SRCS})
 target_link_libraries(orbital_propagator libearthGRAM2016 cspice csupport)
@@ -194,11 +218,11 @@ target_link_libraries(orbital_propagator libearthGRAM2016 cspice csupport)
 
 ## Building the doc
 
-Install doxygen and then from the *doc* directory enter
+The API documentation can be built using Doxygen. Once Doxygen is installed, navigate to the `doc` directory and enter
 
 ```bash
 doxygen
 ```
 
-The main entry point is *doc/html/index.html*.
+The main entry point is `doc/html/index.html`.
 
