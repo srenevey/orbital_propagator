@@ -96,7 +96,7 @@ Open a terminal and navigate to EarthGRAM2016/Source. Then, type
 A file EarthGRAM2016.a should be crated in the *build* directory.
 
 ## Planetary ephemerides
-The high precision propagator uses JPL's ephemerides to retrieve the planet's positions. This process is facilitated by the SPICE toolbox developed by NASA's Naif. The kernels used by the SPICE toolbox can be accessed from the [JPL's Naif website](https://naif.jpl.nasa.gov/pub/naif/generic_kernels/) by going to Data > Generic Kernels > Generic Kernels and navigating in the subfolders. The required kernels are (right click > "Save Link As..." to download the file directly):
+The propagator uses JPL's ephemerides to retrieve the planet's positions. This process is facilitated by the SPICE toolbox developed by NASA's Naif. The kernels used by the SPICE toolbox can be accessed from the [JPL's Naif website](https://naif.jpl.nasa.gov/pub/naif/generic_kernels/) by going to Data > Generic Kernels > Generic Kernels and navigating in the subfolders. The required kernels are (right click > "Save Link As..." to download the file directly):
 - [de430.bsp](https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/de430.bsp)
 - [earth_latest_high_prec.bpc](https://naif.jpl.nasa.gov/pub/naif/generic_kernels/pck/earth_latest_high_prec.bpc)
 - [gm_de431.tpc](https://naif.jpl.nasa.gov/pub/naif/generic_kernels/pck/gm_de431.tpc)
