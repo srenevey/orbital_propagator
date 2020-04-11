@@ -15,6 +15,11 @@ namespace Dimension {
         return m_data;
     }
 
+    const BaseDimension& BaseDimension::operator-() {
+        m_data = -m_data;
+        return *this;
+    }
+
     BaseDimension operator+(const BaseDimension &a, const BaseDimension &b) {
         return BaseDimension(a.m_data + b.m_data);
     }

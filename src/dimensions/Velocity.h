@@ -15,6 +15,7 @@ namespace Dimension {
          * @param velocity in kilometers per second
          */
         explicit Velocity(double velocity);
+        Velocity(const BaseDimension& a);
     };
 }
 

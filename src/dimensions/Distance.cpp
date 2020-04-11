@@ -6,6 +6,7 @@
 
 namespace Dimension {
     Distance::Distance(double d): BaseDimension(d) {}
+    Distance::Distance(const BaseDimension& a): BaseDimension(a) {}
 }
 
 namespace Unit {

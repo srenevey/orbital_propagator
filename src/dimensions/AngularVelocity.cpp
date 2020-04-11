@@ -6,6 +6,7 @@
 
 namespace Dimension {
     AngularVelocity::AngularVelocity(double d): BaseDimension(d) {}
+    AngularVelocity::AngularVelocity(const BaseDimension &a): BaseDimension(a) {}
 }
 
 namespace Unit {

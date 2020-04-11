@@ -10,7 +10,7 @@ namespace Dimension {
     /** Base class used to define physical dimensions. */
     class BaseDimension {
     public:
-        explicit BaseDimension(double d);
+        BaseDimension(double d);
         virtual ~BaseDimension();
 
         /** Returns the underlying data of the dimension. */
@@ -19,6 +19,7 @@ namespace Dimension {
         /** Converts the dimension to double. */
         operator double() const;
 
+        const BaseDimension& operator-();
         friend BaseDimension operator+(const BaseDimension& a, const BaseDimension& b);
         friend BaseDimension operator-(const BaseDimension& a, const BaseDimension& b);
         friend BaseDimension operator*(const double& a, const BaseDimension& b);

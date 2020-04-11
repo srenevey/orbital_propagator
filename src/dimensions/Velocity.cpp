@@ -6,6 +6,7 @@
 
 namespace Dimension {
     Velocity::Velocity(double d): BaseDimension(d) {}
+    Velocity::Velocity(const BaseDimension& a): BaseDimension(a) {}
 }
 
 namespace Unit {

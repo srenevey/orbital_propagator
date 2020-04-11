@@ -16,6 +16,7 @@ namespace Dimension {
          * @param angular_velocity in radians per second
          */
         explicit AngularVelocity(double angular_velocity);
+        AngularVelocity(const BaseDimension& a);
     };
 }
 

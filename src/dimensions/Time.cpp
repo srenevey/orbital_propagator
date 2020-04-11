@@ -6,6 +6,7 @@
 
 namespace Dimension {
     Time::Time(const double d): BaseDimension(d) {}
+    Time::Time(const BaseDimension& a): BaseDimension(a) {}
 }
 
 namespace Unit {
