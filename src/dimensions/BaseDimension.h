@@ -30,8 +30,7 @@ namespace Dimension {
     };
 }
 
-/*! @brief Namespace containing the definitions of literals to specify the unit of each dimension.
- */
+/** Namespace containing the definitions of literals to specify the unit of each dimension. */
 namespace Unit {}
 
 #endif //ORBITAL_PROPAGATOR_BASEDIMENSION_H
