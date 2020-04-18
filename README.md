@@ -1,4 +1,4 @@
-This orbital propagator computes the trajectory and attitude of a spacecraft subject to various orbital perturbations. Currently supported are atmospheric drag (exponentional model or EarthGRAM), geopotential perturbations, third-body effects, solar radiation pressure, and magnetic perturbations. An example is provided in main.cpp and the documentation can be built by running `doxygen` from `doc`.
+This orbital propagator computes the trajectory and attitude of a spacecraft subject to various orbital perturbations. Currently supported are atmospheric drag (exponentional model or EarthGRAM 2016), geopotential perturbations, third-body effects, solar radiation pressure, and magnetic perturbations. An example is provided in main.cpp and the documentation can be built by running `doxygen` from `doc`.
 
 Note: the propagator is still a work in progress and has not been validated yet. The output might be inaccurate / incorrect.
 
@@ -230,5 +230,5 @@ The API documentation can be built using Doxygen. Once Doxygen is installed, nav
 doxygen
 ```
 
-The main entry point is `doc/html/index.html`.
+The main entry point of the API documentation will be generated in `doc/html/index.html`.
 
