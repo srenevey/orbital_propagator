@@ -5,12 +5,6 @@
 #ifndef CPP_PROPAGATOR_CONSTANTS_H
 #define CPP_PROPAGATOR_CONSTANTS_H
 
-enum class Body;
-
-#include <string>
-#include <unordered_map>
-#include "Body.h"
-
 namespace constants {
 
 	// Gravitational parameters

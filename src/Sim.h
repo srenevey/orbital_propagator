@@ -15,9 +15,6 @@ extern "C" {
 
 /** Base class used to load the SPICE kernels and run the simulation. */
 class Sim {
-    string m_meta_kernel;
-    EnvironmentModel m_env_model;
-
 public:
     explicit Sim(std::string meta_kernel);
     ~Sim();
@@ -32,6 +29,10 @@ public:
      * @param dt            Integration step (sec)
      */
     void integrate(Spacecraft& sc, const EnvironmentModel& env_model, const std::string& epoch, const Dimension::Time t0, const Dimension::Time t1, const Dimension::Time dt);
+
+private:
+    std::string m_meta_kernel;
+    EnvironmentModel m_env_model;
 };
 
 

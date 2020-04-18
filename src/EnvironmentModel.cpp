@@ -9,71 +9,59 @@
 EnvironmentModel::EnvironmentModel():
         m_gp_degree(0),
         m_atm_model(AtmModel::None),
-        m_third_body({}),
+        m_third_bodies({}),
         m_earth_gram_atm_model(nullptr),
-        m_srp_flag(false)
+        m_srp_flag(false),
+        m_mag_flag(false)
 {
-    m_central_body = new Earth();
+    m_central_body = Body::Earth;
 }
 
 
-EnvironmentModel::EnvironmentModel(Body central_body, int gp_degree, const std::string& geopot_model_path, const std::vector<Body>& third_body, AtmModel atm_model, const std::string& earthgram_path, bool srp_flag, const std::string& epoch):
+EnvironmentModel::EnvironmentModel(Body central_body, int gp_degree, const std::string& geopot_model_path, const std::vector<Body>& third_bodies, AtmModel atm_model, const std::string& earthgram_path, const std::string& epoch, bool srp_flag, bool mag_flag):
+        m_central_body(central_body),
         m_gp_degree(gp_degree),
+        m_third_bodies(third_bodies),
         m_atm_model(atm_model),
+        m_earth_gram_atm_model(nullptr),
         m_srp_flag(srp_flag),
-        m_earth_gram_atm_model(nullptr)
+        m_mag_flag(mag_flag)
 {
-    m_central_body = BodyContainer::create_body(central_body);
-    for (auto body: third_body) {
-        m_third_body.push_back(BodyContainer::create_body(body));
-    }
-
     // Load geopotential coefficients from model file
     if (gp_degree > 1 && !geopot_model_path.empty())
         m_cs_coeffs = load_coefficients(gp_degree, geopot_model_path);
 
     // If an atmospheric model is selected, initialize coefficients
-    if (m_atm_model == AtmModel::EarthGRAM && m_central_body->name() == Body::Earth) {
+    if (m_atm_model == AtmModel::EarthGRAM && m_central_body == Body::Earth) {
         if (!epoch.empty()) {
-            m_earth_gram_atm_model = new Atm1;
+            m_earth_gram_atm_model = std::make_unique<Atm1>();
             m_earth_gram_atm_model->initdata(earthgram_path, "NameRef.txt", epoch);
         } else {
             std::cerr << "The epoch must be passed in as argument." << std::endl;
         }
-    } else if (m_atm_model == AtmModel::Exponential && m_central_body->name() == Body::Earth) {
+    } else if (m_atm_model == AtmModel::Exponential && m_central_body == Body::Earth) {
         init_exp_model();
-    } else if (m_atm_model != AtmModel::None && m_central_body->name() != Body::Earth) {
+    } else if (m_atm_model != AtmModel::None && m_central_body != Body::Earth) {
         m_atm_model = AtmModel::None;
         std::cerr << "The drag effects are currently only supported for the Earth." << std::endl;
     }
 }
 
 
-EnvironmentModel::~EnvironmentModel() {
-    delete m_central_body;
-    for (auto body: m_third_body)
-        delete body;
-    delete m_earth_gram_atm_model;
+Body EnvironmentModel::central_body() const {
+    return m_central_body;
 }
 
-
-std::vector<BodyContainer*> EnvironmentModel::third_body() const {
-    return m_third_body;
+std::vector<Body> EnvironmentModel::third_bodies() const {
+    return m_third_bodies;
 }
-
 
 int EnvironmentModel::gp_degree() const {
     return m_gp_degree;
 }
 
-
 const Eigen::MatrixXd &EnvironmentModel::cs_coeffs() const {
     return m_cs_coeffs;
-}
-
-
-BodyContainer* EnvironmentModel::central_body() const {
-    return m_central_body;
 }
 
 bool EnvironmentModel::is_drag() const {
@@ -83,6 +71,10 @@ bool EnvironmentModel::is_drag() const {
 
 bool EnvironmentModel::is_srp_flag() const {
     return m_srp_flag;
+}
+
+bool EnvironmentModel::mag_flag() const {
+    return m_mag_flag;
 }
 
 Eigen::MatrixXd EnvironmentModel::load_coefficients(const int degree, const std::string model_file_name) {
@@ -125,7 +117,7 @@ Eigen::MatrixXd EnvironmentModel::load_coefficients(const int degree, const std:
     return coefficients;
 }
 
-double EnvironmentModel::atm_density(const State& state, const double elapsed_time, const SpiceDouble et) const {
+double EnvironmentModel::atm_density(const StateVector& state, const double elapsed_time, const double et) const {
 
     double density = 0.0;
     SpiceDouble inertial_position[3];
@@ -134,13 +126,9 @@ double EnvironmentModel::atm_density(const State& state, const double elapsed_ti
 
     if (m_atm_model == AtmModel::EarthGRAM) {
 
-        // Transform the state from J2000 (inertial) to ITRF93 (rotating)
-        SpiceDouble rot[3][3];
-        pxform_c("J2000", "ITRF93", et, rot);
-		
-		SpiceDouble ecef_position[3];
-		mxv_c(rot, inertial_position, ecef_position);
-
+        // Transform the state to ITRF93 (rotating)
+        StateVector itrf93_state = state.to_frame(ReferenceFrame::ITRF93);
+        Vector3d<Dimension::Distance> itrf93_position = itrf93_state.position();
 
 		// Compute Earth's flattening
 		SpiceInt dim = 0;
@@ -150,6 +138,7 @@ double EnvironmentModel::atm_density(const State& state, const double elapsed_ti
 
 		// Transform from rectangular to geodetic coordinates
 		SpiceDouble lon = 0.0, lat = 0.0, alt = 0.0;
+		SpiceDouble ecef_position[3] = {itrf93_position[0], itrf93_position[1], itrf93_position[2]};
 		recgeo_c(ecef_position, radii[0], f, &lon, &lat, &alt);
 
         double pm1, dm1, tm1, um1, vm1, wm1, pp1, dp1, tp1, up1, vp1, wp1, ps1, ds1, ts1,
@@ -172,13 +161,8 @@ double EnvironmentModel::atm_density(const State& state, const double elapsed_ti
 
     } else if (m_atm_model == AtmModel::Exponential) {
 
-        // Retrieve Earth's radius
-        SpiceInt dim = 0;
-		SpiceDouble radius[3];
-		bodvrd_c("EARTH", "RADII", 3, &dim, radius);
-
 		// Compute the altitude above the ellipsoid. There is no atmosphere above 1100 km.
-        double h_ell = vnorm_c(inertial_position) - radius[0];
+		double h_ell = state.position().norm() - constants::R_EARTH;
         if (h_ell <= 1100.0) {
             for (int i = 0; i < 28; ++i) {
                 if (m_exp_atm_model[i][0] <= h_ell && m_exp_atm_model[i][1] > h_ell) {
@@ -196,39 +180,25 @@ double EnvironmentModel::atm_density(const State& state, const double elapsed_ti
     return density;
 }
 
-Eigen::Vector3d EnvironmentModel::body_vector(const BodyContainer* body, const SpiceDouble et) const {
+Vector3d<Dimension::Distance> EnvironmentModel::body_vector(const Body& body, const double et, ReferenceFrame frame) const {
+    std::string central_body = std::to_string(m_central_body.naif_id());
+    std::string third_body = std::to_string(body.naif_id());
 
-    std::string cb = std::to_string(m_central_body->naif_id());
-    std::string tb = std::to_string(body->naif_id());
-    /*
-    if (m_central_body != std::string("Earth") && m_central_body != std::string("Sun") && central_body != std::string("Moon"))
-        cb += " barycenter";
-    if (third_body != std::string("Earth") && third_body != std::string("Sun") && third_body != std::string("Moon"))
-        tb += " barycenter";
-    */
-
-    // Get the state of the third body relative to the central body
     SpiceDouble third_body_state[6];
     SpiceDouble lt = 0;
-    if (m_central_body->name() == Body::Earth)
-        spkezr_c(tb.c_str(), et, "J2000", "NONE", cb.c_str(), third_body_state, &lt);
-    else
-        spkezr_c(tb.c_str(), et, "ECLIPJ2000", "NONE", cb.c_str(), third_body_state, &lt);
-
-   return Eigen::Vector3d(third_body_state[0], third_body_state[1], third_body_state[2]); // central body to third body
+    spkezr_c(third_body.c_str(), et, std::string(frame).c_str(), "NONE", central_body.c_str(), third_body_state, &lt);
+    return Vector3d<Dimension::Distance>(frame, third_body_state);
 }
 
-Eigen::MatrixXd EnvironmentModel::geopotential_harmonic_coeff(const State& state, SpiceDouble et) const {
-    // Transform the position from J2000 (inertial) to ITRF93 (rotating).
-    SpiceDouble rot[3][3];
-    pxform_c("J2000", "ITRF93", et, rot);
+Eigen::MatrixXd EnvironmentModel::geopotential_harmonic_coeff(const StateVector& state, double et) const {
 
-    SpiceDouble ecef_position[3];
-    SpiceDouble s_eci_position[3];
-    for (int i = 0; i < 3; ++i)
-        s_eci_position[i] = state.position()[i];
-    mxv_c(rot, s_eci_position, ecef_position);
+    if (state.time() != et) {
+        throw;
+    }
 
+    // Transform the position from to ITRF93 (rotating).
+    StateVector state_itrf93 = state.to_frame(ReferenceFrame::ITRF93);
+    Vector3d<Dimension::Distance> ecef_position = state_itrf93.position();
 
     // Returns the index for degree n and order m.
     auto index = [](int n, int m) { return n * (n + 1) / 2 + m; };
@@ -241,7 +211,7 @@ Eigen::MatrixXd EnvironmentModel::geopotential_harmonic_coeff(const State& state
 
     // Compute V and W coefficients
     int num_rows = (m_gp_degree + 2) * (m_gp_degree + 3) / 2;
-    double r = vnorm_c(ecef_position);
+    double r = ecef_position.norm();
     Eigen::MatrixXd VW_coeffs = Eigen::MatrixXd::Zero(num_rows, 2);
     VW_coeffs(0, 0) = constants::R_EARTH_EGM08 / r;
     VW_coeffs(0, 1) = 0;
@@ -290,34 +260,31 @@ Eigen::MatrixXd EnvironmentModel::geopotential_harmonic_coeff(const State& state
 }
 
 
-Eigen::Vector3d EnvironmentModel::sun_spacecraft_vector(const State& state, SpiceDouble et) const {
-    Eigen::Vector3d r_sun2sc(0.0, 0.0, 0.0);
-    if (m_central_body->name() == Body::Sun) {
+Vector3d<Dimension::Distance> EnvironmentModel::sun_spacecraft_vector(const StateVector& state, double et) const {
+    Vector3d<Dimension::Distance> r_sun2sc(state.frame());
+
+    if (m_central_body == Body::Sun) {
         r_sun2sc = state.position();
     }
     else {
-        std::string cb = std::to_string(m_central_body->naif_id());
+        std::string cb = std::to_string(m_central_body.naif_id());
 
-        //if (m_central_body->name() != Body::Earth && m_central_body->name() != Body::Sun && m_central_body->name() != Body::Moon)
-        //    cb += " barycenter";
-
+        // Retrieve the position vector from the Sun to the central body
         SpiceDouble central_body_state[6];
         SpiceDouble lt = 0.0;
-        if (m_central_body->name() == Body::Earth) // TODO: update to return vector in spacecraft ref frame
-            spkezr_c(cb.c_str(), et, "J2000", "NONE", "Sun", central_body_state, &lt);
-        else
-            spkezr_c(cb.c_str(), et, "ECLIPJ2000", "NONE", "Sun", central_body_state, &lt);
+        spkezr_c(cb.c_str(), et, std::string(state.frame()).c_str(), "NONE", "Sun", central_body_state, &lt);
+        Vector3d<Dimension::Distance> r_sun2cb(state.frame(), central_body_state);
 
-        r_sun2sc = {central_body_state[0] + state.position()[0], central_body_state[1] + state.position()[1], central_body_state[2] + state.position()[2]};
+        r_sun2sc = r_sun2cb + state.position();
     }
     return r_sun2sc;
 }
 
-double EnvironmentModel::in_shadow(const State& state, SpiceDouble et) const {
-    Eigen::Vector3d r_sun2sc = sun_spacecraft_vector(state, et);
+double EnvironmentModel::in_shadow(const StateVector& state, double et) const {
+    Vector3d<Dimension::Distance> r_sun2sc = sun_spacecraft_vector(state, et);
 
-    double a = asin(Sun::RADIUS / r_sun2sc.norm());
-    double b = asin(m_central_body->radius() / state.position().norm());
+    double a = asin(constants::R_SUN / r_sun2sc.norm());
+    double b = asin(m_central_body.radius() / state.position().norm());
     double c = acos( state.position().dot(r_sun2sc) / (state.position().norm() * r_sun2sc.norm()));
 
     double nu = 0.0;
@@ -482,26 +449,16 @@ void EnvironmentModel::init_exp_model() {
     m_exp_atm_model[27][3] = 268.0;
 }
 
-Eigen::Vector3d EnvironmentModel::magnetic_field(const State& state, SpiceDouble et) const {
-    Eigen::Vector3d m = pow(constants::IGRF_2020_RADIUS, 3) * Eigen::Vector3d(constants::IGRF_2020_G11, constants::IGRF_2020_H11, constants::IGRF_2020_G01);
+Vector3d<double> EnvironmentModel::magnetic_field(const StateVector& state, double et) const {
+    Vector3d<double> m(pow(constants::IGRF_2020_RADIUS, 3) * Vector3d<double>(ReferenceFrame::ITRF93, {constants::IGRF_2020_G11, constants::IGRF_2020_H11, constants::IGRF_2020_G01}));
 
-    // Transform the position from J2000 (inertial) to ITRF93 (rotating).
-    SpiceDouble rot[3][3];
-    pxform_c("J2000", "ITRF93", et, rot);
-    SpiceDouble ecef_position[3];
-    SpiceDouble s_eci_position[3];
-    for (int i = 0; i < 3; ++i)
-        s_eci_position[i] = state.position()[i];
-    mxv_c(rot, s_eci_position, ecef_position);
-    Eigen::Vector3d r_ecef(ecef_position[0], ecef_position[1], ecef_position[2]);
+    // Transform the position to ITRF93 (rotating).
+    StateVector state_itrf93 = state.to_frame(ReferenceFrame::ITRF93);
+    Vector3d<Dimension::Distance> r_itrf93 = state_itrf93.position();
 
-    Eigen::Vector3d B = 3.0 * (m.dot(r_ecef) * r_ecef - r_ecef.norm()*r_ecef.norm()*m) / pow(r_ecef.norm(), 5);
-    SpiceDouble B_ecef[3]{B[0], B[1], B[2]};
+    // Compute the magnetic field
+    Vector3d<double> B = 3.0 * (m.dot(r_itrf93) * r_itrf93 - r_itrf93.norm()*r_itrf93.norm()*m) / pow(r_itrf93.norm(), 5);
 
-    // Transform from ITRF93 (rotating) to J2000 (inertial)
-    pxform_c("ITRF93", "J2000", et, rot);
-    SpiceDouble B_eci[3];
-    mxv_c(rot, B_ecef, B_eci);
-
-    return Eigen::Vector3d(B_eci[0], B_eci[1], B_eci[2]);
+    // Transform back to initial frame and return
+    return transformations::rotate_to_frame(B, state.frame(), et);
 }

@@ -15,7 +15,7 @@ Sim::~Sim() {
 }
 
 void Sim::integrate(Spacecraft& sc, const EnvironmentModel& env_model, const std::string& epoch, const Dimension::Time t0, const Dimension::Time t1, const Dimension::Time dt) {
-    SpiceDouble et;
+    double et;
     str2et_c(epoch.c_str(), &et);
     EqMotion eom(sc, env_model, et);
     Integrator::integrate(sc, eom, t0.data(), t1.data(), dt.data());

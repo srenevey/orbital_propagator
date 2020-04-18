@@ -53,10 +53,10 @@ where <ABSOLUTE_PATH_TO_PROJECT_ROOT> must be modified accordingly. By default, 
 
 The EarthGRAM2016 model needs to be compiled into a library. Assuming that [CMake](https://cmake.org/) is installed, create a file called CMakeList.txt in EarthGRAM2016/Source and add the following lines
 
-    cmake_minimum_required(VERSION 3.12)
+    cmake_minimum_required(VERSION 3.14)
     project(EarthGRAM2016)
     
-    set(CMAKE_CXX_STANDARD 11)
+    set(CMAKE_CXX_STANDARD 20)
     
     add_library(EarthGRAM2016 STATIC
         Atmod1.cpp
@@ -148,11 +148,11 @@ The orbital propagator is based on Eigen, boost and CSPICE. These libraries shou
 cmake_minimum_required(VERSION 3.14)
 project(orbital_propagator)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 set(PROJECT_SOURCE_DIR "<ORBITAL_PROPAGATOR_ROOT_DIR>")
 
-include_directories(. /usr/local/boost_1_72_0 /usr/local/eigen-3.3.7 ../libs/cspice/include ../libs/earthGRAM2016/src)
+include_directories(. /usr/local/boost_1_72_0 /usr/local/eigen-3.3.7 /usr/local/cspice/include ../libs/earthGRAM2016/src)
 
 add_library(libearthGRAM2016 STATIC IMPORTED)
 set_target_properties(libearthGRAM2016 PROPERTIES
@@ -181,34 +181,40 @@ set(ORBITAL_PROPAGATOR_SRCS
         main.cpp
         Spacecraft.cpp
         Spacecraft.h
-        Body.cpp
         Body.h
-        State.cpp
-        State.h
         ReferenceFrame.h
         Integrator.cpp
         Integrator.h
         Sim.cpp
         Sim.h
-        dimensions/Distance.h
-        dimensions/Velocity.h
-        dimensions/Dimensions.h
-        dimensions/BaseDimension.h
-        dimensions/BaseDimension.cpp
-        dimensions/Distance.cpp
-        dimensions/Velocity.cpp
+        dimensions/Acceleration.cpp
+        dimensions/Acceleration.h
+        dimensions/AngularAcceleration.cpp
+        dimensions/AngularAcceleration.h
         dimensions/AngularVelocity.cpp
         dimensions/AngularVelocity.h
+        dimensions/BaseDimension.cpp
+        dimensions/BaseDimension.h
+        dimensions/Dimensions.h
+        dimensions/Distance.cpp
+        dimensions/Distance.h
+        dimensions/Velocity.h
+        dimensions/Velocity.cpp
         dimensions/Time.h
         dimensions/Time.cpp
         dimensions/Area.cpp
         dimensions/Area.h
-        Quaternion.cpp
-        Quaternion.h
         Sensor.h
         Magnetometer.cpp
         Magnetometer.h
-        AtmModel.h)
+        AtmModel.h
+        StateVector.cpp
+        StateVector.h
+        algebra/Vector.h
+        algebra/Matrix.h
+        algebra/Quaternion.cpp
+        algebra/Quaternion.h
+        algebra/transformations.h)
 
 add_executable(orbital_propagator ${ORBITAL_PROPAGATOR_SRCS})
 target_link_libraries(orbital_propagator libearthGRAM2016 cspice csupport)

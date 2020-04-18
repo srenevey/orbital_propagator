@@ -8,19 +8,22 @@
 
 #include <boost/math/special_functions/factorials.hpp>
 #include <boost/math/special_functions/legendre.hpp>
-#include <Eigen/Dense>
 #include <fstream>
 #include <string>
 #include <array>
+#include <memory>
 #include <numeric>
 #include <iterator>
 #include <iostream>
 #include <vector>
 #include "constants.h"
 #include "AtmModel.h"
-#include "State.h"
 #include "Atmod1.h"
 #include "Body.h"
+#include "StateVector.h"
+#include "ReferenceFrame.h"
+#include "algebra/transformations.h"
+#include <Eigen/Dense>
 
 extern "C" {
     #include "SpiceUsr.h"
@@ -29,45 +32,38 @@ extern "C" {
 
 /** Environment model used for the simulation. */
 class EnvironmentModel {
-    BodyContainer* m_central_body; /*!< String containing the name of the central body. */
-    int m_gp_degree; /*!< Degree of expansion of the Earth geopotential. 0 if not set */
-    Eigen::MatrixXd m_cs_coeffs; /*!< Matrix containing the C and S normalized coefficients used to compute the geopotential effect. */
-    std::vector<BodyContainer*> m_third_body; /*!< Vector containing the celestial bodies accounted for in the computation of third body perturbations. */
-    AtmModel m_atm_model; /*!< String containing the name of the atmospheric model to be used. Current options are exp (default) and EarthGRAM. */
-    Atm1* m_earth_gram_atm_model; /*!< Pointer to an instance of EarthGRAM 2016 model's Atm1 object. */
-    double m_exp_atm_model[28][4]; /*!< Array containing the exponential atmospheric model */
-    bool m_srp_flag; /*!< Flag indicating if the perturbations due to solar pressure radiation are active. */
-
 public:
     EnvironmentModel();
 
     /**
-     * @param central_body          Body the spacecraft is orbiting
+     * @param central_body          Central body
      * @param gp_degree             Degree of expansion of the geopotential
      * @param geopot_model_path     Path to the geopotential model
-     * @param third_body            List of bodies that are accounted for
-     * @param atm_model             Atmospheric model used for drag computation
-     * @param earthgram_path        Path to EarthGRAM 2016
-     * @param srp_flag              Flag indicating if the solar radiation pressure is accounted for
+     * @param third_bodies          List of celestial bodies that are accounted for
+     * @param atm_model             Atmospheric model used for drag computation. Current options are None, Exponential, and EarthGRAM.
+     * @param earthgram_path        Path to the EarthGRAM 2016 root directory
      * @param epoch                 Initial epoch with format "YYYY-MM-DD hh:mm:ss"
+     * @param srp_flag              Flag indicating if the solar radiation pressure is accounted for
+     * @param mag_flag              Flag indicating if the magnetic perturbations are accounted for
      */
-    explicit EnvironmentModel(
+    EnvironmentModel(
             Body central_body,
             int gp_degree = 0,
             const std::string& geopot_model_path = "",
-            const std::vector<Body>& third_body = std::vector<Body> {},
+            const std::vector<Body>& third_bodies = std::vector<Body> {},
             AtmModel atm_model = AtmModel::None,
             const std::string& earthgram_path = "",
+            const std::string& epoch = "",
             bool srp_flag = false,
-            const std::string& epoch = "");
-    virtual ~EnvironmentModel();
+            bool mag_flag = false);
 
-    [[nodiscard]] BodyContainer* central_body() const;
-    [[nodiscard]] std::vector<BodyContainer*> third_body() const;
+    [[nodiscard]] Body central_body() const;
+    [[nodiscard]] std::vector<Body> third_bodies() const;
     [[nodiscard]] int gp_degree() const;
     [[nodiscard]] const Eigen::MatrixXd &cs_coeffs() const;
     [[nodiscard]] bool is_drag() const;
     [[nodiscard]] bool is_srp_flag() const;
+    [[nodiscard]] bool mag_flag() const;
 
 
     /** Retrieves the density from the atmosphere model specified in the EnvironmentModel.
@@ -77,29 +73,30 @@ public:
      *  @param et                   Ephemeris time.
      *  @return                     Atmosphere density in kg/km<sup>3</sup>.
      */
-    [[nodiscard]] double atm_density(const State& state, double elapsed_time, SpiceDouble et) const;
+    [[nodiscard]] double atm_density(const StateVector& state, double elapsed_time, double et) const;
 
     /** Computes the V and W coefficients required to compute the acceleration.
      *
      *  @param state        State vector of the spacecraft.
      *  @param et           Ephemeris time.
      */
-    [[nodiscard]] Eigen::MatrixXd geopotential_harmonic_coeff(const State& state, SpiceDouble et) const;
+    [[nodiscard]] Eigen::MatrixXd geopotential_harmonic_coeff(const StateVector& state, double et) const;
 
-    /** Computes the position from the central body to the third body.
+    /** Computes the position vector from the central body to the given body.
      *
-     *  @param body         Third body.
+     *  @param body         Body to retrieve the position vector for.
      *  @param et			Ephemeris time.
+     *  @param frame        Reference frame in which the vector is expressed.
      */
-    Eigen::Vector3d body_vector(const BodyContainer* body, SpiceDouble et) const;
+    [[nodiscard]] Vector3d<Dimension::Distance> body_vector(const Body& body, double et, ReferenceFrame frame) const;
 
-    /** Computes the vector from the sun to the spacecraft in the J2000 or ECLIPJ2000 reference frame.
+    /** Computes the position vector from the sun to the spacecraft.
      *
      *  @param state        State vector of the spacecraft.
      *  @param et			Ephemeris time.
+     *  @return             Position vector expressed in the reference frame of the state vector.
      */
-    [[nodiscard]] Eigen::Vector3d sun_spacecraft_vector(const State& state, SpiceDouble et) const;
-
+    [[nodiscard]] Vector3d<Dimension::Distance> sun_spacecraft_vector(const StateVector& state, double et) const;
 
     /** Computes the shadow condition on the spacecraft.
      *
@@ -107,18 +104,29 @@ public:
      *  @param et			Ephemeris time.
      *  @return             Decimal number with value 0 if no shadow, 1 if in umbra, and between 0 and 1 if in penumbra.
      */
-    [[nodiscard]] double in_shadow(const State& state, SpiceDouble et) const;
+    [[nodiscard]] double in_shadow(const StateVector& state, double et) const;
 
 
     /** Computes the Earth magnetic field at the given position. The computation is based on a dipole model.
      *
      *  @param state        State vector of the spacecraft.
      *  @param et			Ephemeris time.
-     *  @return             Local magnetic field vector expressed in the J2000 reference frame (in Tesla).
+     *  @return             Local magnetic field vector in Tesla, expressed in the reference frame of the state vector.
      */
-    [[nodiscard]] Eigen::Vector3d magnetic_field(const State& state, SpiceDouble et) const;
+    [[nodiscard]] Vector3d<double> magnetic_field(const StateVector& state, double et) const;
 
 private:
+    Body m_central_body; /*!< Central body. */
+    int m_gp_degree; /*!< Degree of expansion of the Earth geopotential. */
+    Eigen::MatrixXd m_cs_coeffs; /*!< Matrix containing the C and S normalized coefficients used to compute the geopotential effect. */
+    std::vector<Body> m_third_bodies; /*!< Vector containing the celestial bodies accounted for in the computation of third body perturbations. */
+    AtmModel m_atm_model; /*!< Variant of the atmospheric model to be used. Current options are None, Exponential, and EarthGRAM. */
+    std::unique_ptr<Atm1> m_earth_gram_atm_model; /*!< Pointer to an instance of EarthGRAM 2016 model's Atm1 object. */
+    double m_exp_atm_model[28][4]; /*!< Array containing the exponential atmospheric model */
+    bool m_srp_flag; /*!< Flag indicating if the perturbations due to solar pressure radiation are active. */
+    bool m_mag_flag; /*!< Flag indicating if the magnetic perturbations are active. */
+
+    // Methods
     Eigen::MatrixXd load_coefficients(int degree, std::string model_file_name);
     void init_exp_model();
 };

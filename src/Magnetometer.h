@@ -5,10 +5,12 @@
 #ifndef ORBITAL_PROPAGATOR_MAGNETOMETER_H
 #define ORBITAL_PROPAGATOR_MAGNETOMETER_H
 
-#include "Sensor.h"
-#include <Eigen/Dense>
 #include <array>
 #include <random>
+#include "Sensor.h"
+#include "StateVector.h"
+#include "algebra/Vector.h"
+#include "algebra/Matrix.h"
 
 /** Model of a 3-axis magnetometer (work in progress). */
 class Magnetometer: public Sensor {
@@ -20,7 +22,7 @@ public:
      * @param max_value             Maximum value that the magnetometer can read
      * @param min_value             Minimum value that the magnetometer can read
      */
-    Magnetometer(std::array<double, 3> bias, std::array<double, 3> stddev, std::array<double, 9> rotation_matrix, double max_value, double min_value);
+    Magnetometer(Vector3d<double> bias, Vector3d<double> stddev, Matrix3d rotation_matrix, double max_value, double min_value);
     ~Magnetometer();
 
     /** Measures the local magnetic field.
@@ -30,12 +32,12 @@ public:
      * @param env_model     Reference to the environment model
      * @return              Magnetic field in the sensor-fixed frame (in Tesla).
      */
-    Eigen::Vector3d measure(const State& state, double et, const EnvironmentModel& env_model);
-    Eigen::Vector3d bias() const;
-    Eigen::Vector3d stddev() const;
+    [[nodiscard]] Vector3d<double> measure(const StateVector& state, double et, const EnvironmentModel& env_model);
+    [[nodiscard]] Vector3d<double> bias() const;
+    [[nodiscard]] Vector3d<double> stddev() const;
 
 private:
-    Eigen::Matrix3d m_rot_bff2sff; // rotation matrix from body-fixed frame to sensor-fixed frame
+    Matrix3d m_rot_bff2sff; // rotation matrix from body-fixed frame to sensor-fixed frame
     double m_max_value;
     double m_min_value;
     std::default_random_engine m_generator;
