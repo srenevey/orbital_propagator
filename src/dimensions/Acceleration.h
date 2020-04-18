@@ -15,7 +15,7 @@ namespace Dimension {
          * @param acceleration in kilometers per second
          */
         explicit Acceleration(double acceleration = 0.);
-        Acceleration(const BaseDimension& a);
+        explicit Acceleration(const BaseDimension& a);
     };
 }
 

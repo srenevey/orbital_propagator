@@ -18,7 +18,7 @@ namespace Dimension {
          * @param distance in kilometers
          */
         explicit Distance(double distance = 0.);
-        Distance(const BaseDimension& a);
+        explicit Distance(const BaseDimension& a);
         friend Area operator*(const Distance& d1, const Distance& d2);
     };
 }

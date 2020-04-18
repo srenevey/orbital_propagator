@@ -15,7 +15,7 @@ namespace Dimension {
          * @param acceleration in radians per square second
          */
         explicit AngularAcceleration(double acceleration = 0.);
-        AngularAcceleration(const BaseDimension& a);
+        explicit AngularAcceleration(const BaseDimension& a);
     };
 }
 
