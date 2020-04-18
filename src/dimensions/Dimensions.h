@@ -10,5 +10,7 @@
 #include "AngularVelocity.h"
 #include "Time.h"
 #include "Area.h"
+#include "Acceleration.h"
+#include "AngularAcceleration.h"
 
 #endif //ORBITAL_PROPAGATOR_DIMENSIONS_H

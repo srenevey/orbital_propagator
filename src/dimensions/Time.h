@@ -14,7 +14,7 @@ namespace Dimension {
         /**
          * @param time in seconds
          */
-        explicit Time(double time);
+        explicit Time(double time = 0.);
         Time(const BaseDimension& a);
     };
 }

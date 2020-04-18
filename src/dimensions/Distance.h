@@ -15,9 +15,9 @@ namespace Dimension {
     class Distance: public BaseDimension {
     public:
         /**
-         * @param distance in kilometers (km)
+         * @param distance in kilometers
          */
-        explicit Distance(double distance);
+        explicit Distance(double distance = 0.);
         Distance(const BaseDimension& a);
         friend Area operator*(const Distance& d1, const Distance& d2);
     };
@@ -37,7 +37,7 @@ namespace Unit {
     /** Creates a distance in kilometers (km). */
     Distance operator "" _km(long double d);
     /** Creates a distance in astronomical units (AU). */
-    Distance operator "" _AU(long double d);
+    Distance operator "" _au(long double d);
     /** Creates a distance in inches (in). */
     Distance operator "" _in(long double d);
     /** Creates a distance in feet (ft). */

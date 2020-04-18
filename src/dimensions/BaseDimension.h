@@ -19,10 +19,16 @@ namespace Dimension {
         /** Converts the dimension to double. */
         operator double() const;
 
-        const BaseDimension& operator-();
+        //const BaseDimension& operator-();
+        BaseDimension operator-();
+        BaseDimension& operator+=(const BaseDimension& a);
         friend BaseDimension operator+(const BaseDimension& a, const BaseDimension& b);
+        friend BaseDimension operator+(const BaseDimension& a, const double& b);
         friend BaseDimension operator-(const BaseDimension& a, const BaseDimension& b);
+        BaseDimension& operator*=(const double& a);
         friend BaseDimension operator*(const double& a, const BaseDimension& b);
+        friend BaseDimension operator*(const int& a, const BaseDimension& b);
+        BaseDimension& operator/=(const double& a);
         friend BaseDimension operator/(const BaseDimension& a, const double& b);
 
     protected:

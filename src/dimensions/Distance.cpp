@@ -5,7 +5,7 @@
 #include "Distance.h"
 
 namespace Dimension {
-    Distance::Distance(double d): BaseDimension(d) {}
+    Distance::Distance(double distance): BaseDimension(distance) {}
     Distance::Distance(const BaseDimension& a): BaseDimension(a) {}
 }
 
@@ -32,7 +32,7 @@ namespace Unit {
         return Distance(d);
     }
 
-    Distance operator "" _AU(long double d) {
+    Distance operator "" _au(long double d) {
         return Distance(constants::AU * d);
     }
 

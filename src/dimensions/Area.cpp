@@ -6,7 +6,7 @@
 
 
 namespace Dimension {
-    Area::Area(double a): BaseDimension(a) {}
+    Area::Area(double area): BaseDimension(area) {}
     Area::Area(const BaseDimension& a): BaseDimension(a) {}
 
     Area operator*(const Distance& d1, const Distance& d2) {

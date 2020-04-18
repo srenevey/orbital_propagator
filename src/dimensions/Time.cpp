@@ -5,7 +5,7 @@
 #include "Time.h"
 
 namespace Dimension {
-    Time::Time(const double d): BaseDimension(d) {}
+    Time::Time(const double time): BaseDimension(time) {}
     Time::Time(const BaseDimension& a): BaseDimension(a) {}
 }
 

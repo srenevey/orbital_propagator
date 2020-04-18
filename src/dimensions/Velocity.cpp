@@ -5,7 +5,7 @@
 #include "Velocity.h"
 
 namespace Dimension {
-    Velocity::Velocity(double d): BaseDimension(d) {}
+    Velocity::Velocity(double velocity): BaseDimension(velocity) {}
     Velocity::Velocity(const BaseDimension& a): BaseDimension(a) {}
 }
 

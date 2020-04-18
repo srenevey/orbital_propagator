@@ -15,7 +15,7 @@ namespace Dimension {
         /**
          * @param area in square kilometers
          */
-        explicit Area(double area);
+        explicit Area(double area = 0.);
         Area(const BaseDimension& a);
     };
 }
