@@ -23,7 +23,6 @@
 #include "StateVector.h"
 #include "ReferenceFrame.h"
 #include "algebra/transformations.h"
-#include <Eigen/Dense>
 
 extern "C" {
     #include "SpiceUsr.h"
@@ -60,10 +59,15 @@ public:
     [[nodiscard]] Body central_body() const;
     [[nodiscard]] std::vector<Body> third_bodies() const;
     [[nodiscard]] int gp_degree() const;
-    [[nodiscard]] const Eigen::MatrixXd &cs_coeffs() const;
     [[nodiscard]] bool is_drag() const;
     [[nodiscard]] bool is_srp_flag() const;
     [[nodiscard]] bool mag_flag() const;
+
+
+    /** Returns the normalized C coefficient for the given degree and order. */
+    [[nodiscard]] double c_coeff(int degree, int order) const;
+    /** Returns the normalized S coefficient for the given degree and order. */
+    [[nodiscard]] double s_coeff(int degree, int order) const;
 
 
     /** Retrieves the density from the atmosphere model specified in the EnvironmentModel.
@@ -80,7 +84,8 @@ public:
      *  @param state        State vector of the spacecraft.
      *  @param et           Ephemeris time.
      */
-    [[nodiscard]] Eigen::MatrixXd geopotential_harmonic_coeff(const StateVector& state, double et) const;
+    [[nodiscard]] std::vector<std::array<double, 2>> geopotential_harmonic_coeff(const StateVector& state, double et) const;
+
 
     /** Computes the position vector from the central body to the given body.
      *
@@ -118,7 +123,8 @@ public:
 private:
     Body m_central_body; /*!< Central body. */
     int m_gp_degree; /*!< Degree of expansion of the Earth geopotential. */
-    Eigen::MatrixXd m_cs_coeffs; /*!< Matrix containing the C and S normalized coefficients used to compute the geopotential effect. */
+    std::unique_ptr<double[]> m_c_coeffs; /*!< Array containing the C normalized coefficients used to compute the geopotential effect. */
+    std::unique_ptr<double[]> m_s_coeffs; /*!< Array containing the S normalized coefficients used to compute the geopotential effect. */
     std::vector<Body> m_third_bodies; /*!< Vector containing the celestial bodies accounted for in the computation of third body perturbations. */
     AtmModel m_atm_model; /*!< Variant of the atmospheric model to be used. Current options are None, Exponential, and EarthGRAM. */
     std::unique_ptr<Atm1> m_earth_gram_atm_model; /*!< Pointer to an instance of EarthGRAM 2016 model's Atm1 object. */
@@ -127,8 +133,9 @@ private:
     bool m_mag_flag; /*!< Flag indicating if the magnetic perturbations are active. */
 
     // Methods
-    Eigen::MatrixXd load_coefficients(int degree, std::string model_file_name);
+    void load_coefficients(int degree, std::string model_file_name);
     void init_exp_model();
+    int index(int degree, int order) const;
 };
 
 

@@ -59,6 +59,12 @@ int main() {
     std::vector<double> specular_reflection_coeff{0.042, 0.042, 0.184, 0.042, 0.042, 0.184}; // Solar panel: 0.042. Gold foil: 0.184.
     std::vector<double> diffuse_reflection_coeff{0.168, 0.168, 0.736, 0.168, 0.168, 0.736}; // Solar panel: 0.168. Gold foil: 0.736.
 
+    // Residual dipole
+    Dimension::Area area(3.1415 * 7._cm * 7._cm);
+    double current = 0.1; // A
+    double n_turns = 5;
+    Vector3d<double> residual_dipole = n_turns * current * area * Vector3d<double>(ReferenceFrame::BODY, {0.8660, 0.5, 0.});
+
     // Sensors (work in progress)
     Vector3d<double> bias({1.0E-7, 1.0E-7, 1.0E-7}); // Tesla
     Vector3d<double> std_dev({5.0E-6, 5.0E-6, 5.0E-6});
@@ -72,7 +78,7 @@ int main() {
     double drag_coeff = 2.1;
 
     // Create a spacecraft object. The name is used to save the output of the simulation in a file "name.dat".
-    Spacecraft sc("sc", initial_state, mass, drag_coeff, specular_reflection_coeff, diffuse_reflection_coeff, inertia_matrix, face_normals, face_areas, cop_positions, sensors);
+    Spacecraft sc("sc", initial_state, mass, drag_coeff, specular_reflection_coeff, diffuse_reflection_coeff, inertia_matrix, face_normals, face_areas, cop_positions, residual_dipole, sensors);
 
     // Define the initial epoch, final time, and step size.
     std::string epoch = "2020-04-05 16:00:00";

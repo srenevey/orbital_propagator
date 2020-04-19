@@ -7,20 +7,25 @@
 #include "EnvironmentModel.h"
 
 EnvironmentModel::EnvironmentModel():
+        m_central_body(Body::Earth),
         m_gp_degree(0),
+        m_c_coeffs(nullptr),
+        m_s_coeffs(nullptr),
         m_atm_model(AtmModel::None),
         m_third_bodies({}),
         m_earth_gram_atm_model(nullptr),
         m_srp_flag(false),
         m_mag_flag(false)
 {
-    m_central_body = Body::Earth;
+    //m_central_body = Body::Earth;
 }
 
 
 EnvironmentModel::EnvironmentModel(Body central_body, int gp_degree, const std::string& geopot_model_path, const std::vector<Body>& third_bodies, AtmModel atm_model, const std::string& earthgram_path, const std::string& epoch, bool srp_flag, bool mag_flag):
         m_central_body(central_body),
         m_gp_degree(gp_degree),
+        m_c_coeffs(nullptr),
+        m_s_coeffs(nullptr),
         m_third_bodies(third_bodies),
         m_atm_model(atm_model),
         m_earth_gram_atm_model(nullptr),
@@ -29,7 +34,8 @@ EnvironmentModel::EnvironmentModel(Body central_body, int gp_degree, const std::
 {
     // Load geopotential coefficients from model file
     if (gp_degree > 1 && !geopot_model_path.empty())
-        m_cs_coeffs = load_coefficients(gp_degree, geopot_model_path);
+        load_coefficients(gp_degree, geopot_model_path);
+        //m_cs_coeffs = load_coefficients(gp_degree, geopot_model_path);
 
     // If an atmospheric model is selected, initialize coefficients
     if (m_atm_model == AtmModel::EarthGRAM && m_central_body == Body::Earth) {
@@ -60,9 +66,20 @@ int EnvironmentModel::gp_degree() const {
     return m_gp_degree;
 }
 
-const Eigen::MatrixXd &EnvironmentModel::cs_coeffs() const {
-    return m_cs_coeffs;
+int EnvironmentModel::index(int degree, int order) const {
+    return degree * (degree + 1) / 2 + order;
 }
+
+double EnvironmentModel::c_coeff(int degree, int order) const {
+    int i = index(degree, order);
+    return m_c_coeffs[i];
+}
+
+double EnvironmentModel::s_coeff(int degree, int order) const {
+    int i = index(degree, order);
+    return m_s_coeffs[i];
+}
+
 
 bool EnvironmentModel::is_drag() const {
     return m_atm_model != AtmModel::None;
@@ -77,44 +94,42 @@ bool EnvironmentModel::mag_flag() const {
     return m_mag_flag;
 }
 
-Eigen::MatrixXd EnvironmentModel::load_coefficients(const int degree, const std::string model_file_name) {
-    // Initialize matrix containing the coefficients
+void EnvironmentModel::load_coefficients(const int degree, const std::string model_file_name) {
+
+    // Allocates arrays containing the coefficients
     int num_entries = (degree + 1) * (degree + 2) / 2;
+    m_c_coeffs = std::make_unique<double[]>(num_entries);
+    m_s_coeffs = std::make_unique<double[]>(num_entries);
 
-    Eigen::MatrixXd coefficients = Eigen::MatrixXd::Zero(num_entries, 2);
-    coefficients.row(0) << 0, 0;
-    coefficients.row(1) << 0, 0;
-    coefficients.row(2) << 0, 0;
+    for (int i = 0; i < 3; ++i) {
+        m_c_coeffs[i] = 0.;
+        m_s_coeffs[i] = 0.;
+    }
 
-    // Open file containing the geopotential coefficients
-    ifstream data_file;
-    data_file.open(model_file_name);
+    // Opens file containing the geopotential coefficients and populates arrays
+    ifstream data_file(model_file_name);
     if (data_file.is_open()) {
 
-        // Read required lines
+        // Reads required lines
         for (int i = 3; i < num_entries; ++i) {
             string line;
             getline(data_file, line);
 
-            // Parse the line, convert to double and store into matrix
+            // Parses the line, converts to double, and stores into arrays
             unsigned long n = line.find('D');
             while (n != string::npos) {
-                line.replace(n, 1, "e");
+                line.replace(n, 1, "E");
                 n = line.find('D');
             }
             std::istringstream iss(line);
-            std::vector<std::string> results(std::istream_iterator<std::string>{iss},std::istream_iterator<std::string>());
-            for (int j = 0; j < 2; ++j) {
-                coefficients(i, j) = stod(results[j + 2]);
-            }
+            std::vector<std::string> results(std::istream_iterator<std::string>{iss}, std::istream_iterator<std::string>());
+            m_c_coeffs[i] = stod(results[2]);
+            m_s_coeffs[i] = stod(results[3]);
         }
-
         data_file.close();
     } else {
     	std::cerr << "Error opening the file containing the geopotential coefficients." << std::endl;
     }
-
-    return coefficients;
 }
 
 double EnvironmentModel::atm_density(const StateVector& state, const double elapsed_time, const double et) const {
@@ -190,73 +205,65 @@ Vector3d<Dimension::Distance> EnvironmentModel::body_vector(const Body& body, co
     return Vector3d<Dimension::Distance>(frame, third_body_state);
 }
 
-Eigen::MatrixXd EnvironmentModel::geopotential_harmonic_coeff(const StateVector& state, double et) const {
 
-    if (state.time() != et) {
+std::vector<std::array<double, 2>> EnvironmentModel::geopotential_harmonic_coeff(const StateVector& state, double et) const {
+
+    if (state.time() != et)
         throw;
-    }
 
-    // Transform the position from to ITRF93 (rotating).
+    // Transforms the position to ITRF93 (rotating).
     StateVector state_itrf93 = state.to_frame(ReferenceFrame::ITRF93);
     Vector3d<Dimension::Distance> ecef_position = state_itrf93.position();
 
-    // Returns the index for degree n and order m.
-    auto index = [](int n, int m) { return n * (n + 1) / 2 + m; };
-
-    // Lambda expressions used as helpers to get C and S coefficients
-    Eigen::MatrixXd CS_coeffs = cs_coeffs();
-    auto C = [&](int m, int n) { return CS_coeffs(index(m, n), 0); };
-    auto S = [&](int m, int n) { return CS_coeffs(index(m, n), 1); };
-
-
-    // Compute V and W coefficients
+    // Computes V and W coefficients
     int num_rows = (m_gp_degree + 2) * (m_gp_degree + 3) / 2;
     double r = ecef_position.norm();
-    Eigen::MatrixXd VW_coeffs = Eigen::MatrixXd::Zero(num_rows, 2);
-    VW_coeffs(0, 0) = constants::R_EARTH_EGM08 / r;
-    VW_coeffs(0, 1) = 0;
 
-    // Zonal terms
-    VW_coeffs(index(1, 0), 0) = ecef_position[2] * constants::R_EARTH_EGM08 / (r * r) * VW_coeffs(index(0, 0), 0);
-    VW_coeffs(index(1, 0), 1) = 0;
+    std::vector<std::array<double, 2>> vw_coeffs(num_rows);
+    vw_coeffs[0][0] = constants::R_EARTH_EGM08 / r;
+    vw_coeffs[0][1] = 0.;
+
+    vw_coeffs[index(1, 0)][0] = ecef_position[2] * constants::R_EARTH_EGM08 / (r * r) * vw_coeffs[index(0, 0)][0];
+    vw_coeffs[index(1, 0)][1] = 0;
+
     for (int n = 2; n < m_gp_degree + 2; ++n) {
-        VW_coeffs(index(n, 0), 0) =
-                (2 * n - 1) * ecef_position[2] * constants::R_EARTH_EGM08 / (n * r * r) * VW_coeffs(index(n - 1, 0), 0) -
-                (n - 1) * constants::R_EARTH_EGM08 * constants::R_EARTH_EGM08 / (n * r * r) * VW_coeffs(index(n - 2, 0), 0);
-        VW_coeffs(index(n, 0), 1) = 0;
+        vw_coeffs[index(n, 0)][0] =
+                (2 * n-1) * ecef_position[2] * constants::R_EARTH_EGM08 / (n * r * r) * vw_coeffs[index(n-1, 0)][0] -
+                (n-1) * constants::R_EARTH_EGM08 * constants::R_EARTH_EGM08 / (n * r * r) * vw_coeffs[index(n-2, 0)][0];
+        vw_coeffs[index(n, 0)][1] = 0;
     }
 
     // Tesseral terms
     for (int n = 1; n < m_gp_degree + 2; ++n) {
-        VW_coeffs(index(n, n), 0) = (2 * n - 1) *
-                                    (ecef_position[0] * constants::R_EARTH_EGM08 / (r * r) * VW_coeffs(index(n - 1, n - 1), 0) -
-                                     ecef_position[1] * constants::R_EARTH_EGM08 / (r * r) * VW_coeffs(index(n - 1, n - 1), 1));
-        VW_coeffs(index(n, n), 1) = (2 * n - 1) *
-                                    (ecef_position[0] * constants::R_EARTH_EGM08 / (r * r) * VW_coeffs(index(n - 1, n - 1), 1) +
-                                     ecef_position[1] * constants::R_EARTH_EGM08 / (r * r) * VW_coeffs(index(n - 1, n - 1), 0));
+        vw_coeffs[index(n, n)][0] = (2 * n - 1) *
+                                    (ecef_position[0] * constants::R_EARTH_EGM08 / (r * r) * vw_coeffs[index(n-1, n-1)][0] -
+                                     ecef_position[1] * constants::R_EARTH_EGM08 / (r * r) * vw_coeffs[index(n-1, n-1)][1]);
+        vw_coeffs[index(n, n)][1] = (2 * n - 1) *
+                                    (ecef_position[0] * constants::R_EARTH_EGM08 / (r * r) * vw_coeffs[index(n-1, n-1)][1] +
+                                     ecef_position[1] * constants::R_EARTH_EGM08 / (r * r) * vw_coeffs[index(n-1, n-1)][0]);
     }
 
     // Remaining terms
     for (int n = 1; n < m_gp_degree + 2; ++n) {
         for (int m = 1; m < n; ++m) {
             if (n == m + 1) {
-                VW_coeffs(index(n, m), 0) = (2 * n - 1) * ecef_position[2] * constants::R_EARTH_EGM08 / ((n - m) * r * r) *
-                                            VW_coeffs(index(n - 1, m), 0);
-                VW_coeffs(index(n, m), 1) = (2 * n - 1) * ecef_position[2] * constants::R_EARTH_EGM08 / ((n - m) * r * r) *
-                                            VW_coeffs(index(n - 1, m), 1);
+                vw_coeffs[index(n, m)][0] = (2 * n - 1) * ecef_position[2] * constants::R_EARTH_EGM08 / ((n-m) * r * r) *
+                                            vw_coeffs[index(n-1, m)][0];
+                vw_coeffs[index(n, m)][1] = (2 * n - 1) * ecef_position[2] * constants::R_EARTH_EGM08 / ((n-m) * r * r) *
+                                            vw_coeffs[index(n-1, m)][1];
             } else {
-                VW_coeffs(index(n, m), 0) = (2 * n - 1) * ecef_position[2] * constants::R_EARTH_EGM08 / ((n - m) * r * r) *
-                                            VW_coeffs(index(n - 1, m), 0) -
-                                            (n + m - 1) * constants::R_EARTH_EGM08 * constants::R_EARTH_EGM08 / ((n - m) * r * r) *
-                                            VW_coeffs(index(n - 2, m), 0);
-                VW_coeffs(index(n, m), 1) = (2 * n - 1) * ecef_position[2] * constants::R_EARTH_EGM08 / ((n - m) * r * r) *
-                                            VW_coeffs(index(n - 1, m), 1) -
-                                            (n + m - 1) * constants::R_EARTH_EGM08 * constants::R_EARTH_EGM08 / ((n - m) * r * r) *
-                                            VW_coeffs(index(n - 2, m), 1);
+                vw_coeffs[index(n, m)][0] = (2 * n - 1) * ecef_position[2] * constants::R_EARTH_EGM08 / ((n-m) * r * r) *
+                                            vw_coeffs[index(n-1, m)][0] -
+                                            (n+m-1) * constants::R_EARTH_EGM08 * constants::R_EARTH_EGM08 / ((n-m) * r * r) *
+                                            vw_coeffs[index(n-2, m)][0];
+                vw_coeffs[index(n, m)][1] = (2 * n - 1) * ecef_position[2] * constants::R_EARTH_EGM08 / ((n-m) * r * r) *
+                                            vw_coeffs[index(n-1, m)][1] -
+                                            (n+m-1) * constants::R_EARTH_EGM08 * constants::R_EARTH_EGM08 / ((n-m) * r * r) *
+                                            vw_coeffs[index(n-2, m)][1];
             }
         }
     }
-    return VW_coeffs;
+    return vw_coeffs;
 }
 
 

@@ -25,6 +25,7 @@ Spacecraft::Spacecraft(
         const std::vector<Vector3d<double>>& face_normals,
         std::vector<Dimension::Area> face_areas,
         const std::vector<Vector3d<Dimension::Distance>>& face_cop_positions,
+        Vector3d<double> residual_dipole,
         std::vector<std::shared_ptr<Sensor>> sensors
 ):
         m_name(name),
@@ -37,6 +38,7 @@ Spacecraft::Spacecraft(
         m_face_normals(face_normals),
         m_face_areas(std::move(face_areas)),
         m_face_cop_positions(face_cop_positions),
+        m_residual_dipole(residual_dipole),
         m_sensors(sensors)
 {}
 
@@ -83,6 +85,10 @@ std::vector<Dimension::Area> Spacecraft::face_areas() const {
 
 std::vector<Vector3d<Dimension::Distance>> Spacecraft::face_cop_positions() const {
     return m_face_cop_positions;
+}
+
+Vector3d<double> Spacecraft::residual_dipole() const {
+    return m_residual_dipole;
 }
 
 std::vector<std::shared_ptr<Sensor>> Spacecraft::sensors() const {

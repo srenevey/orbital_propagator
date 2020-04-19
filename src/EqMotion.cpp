@@ -69,41 +69,42 @@ void EqMotion::operator()(StateVector &state, StateVector &state_derivative, dou
 }
 
 void EqMotion::geopotential(Vector3d<Dimension::Acceleration> &acc, Vector3d<double> &torque, const StateVector &state, double et) const {
-    // Computes the index for degree n and order m.
-    auto index = [](int n, int m) { return n * (n + 1) / 2 + m; };
 
-    Eigen::MatrixXd cs_coeff = m_env_model.cs_coeffs(); // TODO: no need to use Eigen here, return native array instead
-    auto C = [&](int m, int n) { return cs_coeff(index(m, n), 0); };
-    auto S = [&](int m, int n) { return cs_coeff(index(m, n), 1); };
+    // Creates lambdas to retrieve C and S coefficients from the environment model
+    auto C = [&](int degree, int order) { return m_env_model.c_coeff(degree, order); };
+    auto S = [&](int degree, int order) { return m_env_model.s_coeff(degree, order); };
 
-    Eigen::MatrixXd vw_coeff = m_env_model.geopotential_harmonic_coeff(state, et); // TODO: no need to use Eigen here, return native array instead
-    auto V = [&](int m, int n) { return vw_coeff(index(m, n), 0); };
-    auto W = [&](int m, int n) { return vw_coeff(index(m, n), 1); };
+    // Computes and retrieve the V and W coefficients
+    auto vw_coeffs = m_env_model.geopotential_harmonic_coeff(state, et);
+    // Computes the index for degree n and order m and creates lambda functions
+    auto index = [](int degree, int order) { return degree * (degree + 1) / 2 + order; };
+    auto V = [&](int degree, int order) { return vw_coeffs[index(degree, order)][0]; };
+    auto W = [&](int degree, int order) { return vw_coeffs[index(degree, order)][1]; };
 
     // Computes the acceleration
     Vector3d<Dimension::Acceleration> a_geopot(ReferenceFrame::ITRF93);
 
+    // n = degree, m = order
     for (int n = 0; n < m_env_model.gp_degree() + 1; ++n) {
         for (int m = 0; m < n + 1; ++m) {
             double scale = 0;
             if (m == 0) {
                 scale = sqrt((2 * n + 1));
-                a_geopot[0] += scale * constants::MU_EARTH_EGM08 / (constants::R_EARTH_EGM08 * constants::R_EARTH_EGM08) * (-C(n, 0) * V(n + 1, 1));
-                a_geopot[1] += scale * constants::MU_EARTH_EGM08 / (constants::R_EARTH_EGM08 * constants::R_EARTH_EGM08) * (-C(n, 0) * W(n + 1, 1));
+                a_geopot[0] += scale * constants::MU_EARTH_EGM08 / (constants::R_EARTH_EGM08 * constants::R_EARTH_EGM08) * (-C(n, 0) * V(n+1, 1));
+                a_geopot[1] += scale * constants::MU_EARTH_EGM08 / (constants::R_EARTH_EGM08 * constants::R_EARTH_EGM08) * (-C(n, 0) * W(n+1, 1));
             } else {
-                scale = sqrt(2 * (2 * n + 1) * boost::math::factorial<double>(n - m) /
-                             boost::math::factorial<double>(n + m));
+                scale = sqrt(2 * (2 * n + 1) * boost::math::factorial<double>(n-m) / boost::math::factorial<double>(n+m));
                 a_geopot[0] += scale * constants::MU_EARTH_EGM08 / (constants::R_EARTH_EGM08 * constants::R_EARTH_EGM08) * 0.5 *
-                               ((-C(n, m) * V(n + 1, m + 1) - S(n, m) * W(n + 1, m + 1)) +
-                                boost::math::factorial<double>(n - m + 2) / boost::math::factorial<double>(n - m) *
-                                (C(n, m) * V(n + 1, m - 1) + S(n, m) * W(n + 1, m - 1)));
+                               ((-C(n, m) * V(n+1, m+1) - S(n, m) * W(n+1, m+1)) +
+                                boost::math::factorial<double>(n-m+2) / boost::math::factorial<double>(n-m) *
+                                (C(n, m) * V(n+1, m-1) + S(n, m) * W(n+1, m-1)));
                 a_geopot[1] += scale * constants::MU_EARTH_EGM08 / (constants::R_EARTH_EGM08 * constants::R_EARTH_EGM08) * 0.5 *
-                               ((-C(n, m) * W(n + 1, m + 1) + S(n, m) * V(n + 1, m + 1)) +
-                                boost::math::factorial<double>(n - m + 2) / boost::math::factorial<double>(n - m) *
-                                (-C(n, m) * W(n + 1, m - 1) + S(n, m) * V(n + 1, m - 1)));
+                               ((-C(n, m) * W(n+1, m+1) + S(n, m) * V(n+1, m+1)) +
+                                boost::math::factorial<double>(n-m+2) / boost::math::factorial<double>(n-m) *
+                                (-C(n, m) * W(n+1, m-1) + S(n, m) * V(n+1, m-1)));
             }
             a_geopot[2] += scale * constants::MU_EARTH_EGM08 / (constants::R_EARTH_EGM08 * constants::R_EARTH_EGM08) *
-                           ((n - m + 1) * (-C(n, m) * V(n + 1, m) - S(n, m) * W(n + 1, m)));
+                           ((n-m+1) * (-C(n, m) * V(n+1, m) - S(n, m) * W(n+1, m)));
         }
     }
 
@@ -159,12 +160,7 @@ void EqMotion::magnetic_perturbations(Vector3d<double>& torque, const StateVecto
     Vector3d<double> B = m_env_model.magnetic_field(state, et);
     Vector3d<double> B_bff = transformations::rotate_to_frame(B, ReferenceFrame::BODY, et, state.orientation());
 
-    // Test internal magnetic dipole
-    double area = M_PI * 5E-5*5E-5; // km2
-    double current = 0.1; // A
-    double n_turns = 5;
-    Vector3d<double> dipole = n_turns * current * area * Vector3d<double>(ReferenceFrame::BODY, {1., 0., 0.});
-    torque = dipole.cross(B_bff);
+    torque = m_spacecraft.residual_dipole().cross(B_bff);
 }
 
 void EqMotion::third_body_effect(Vector3d<Dimension::Acceleration>& acc, const StateVector& state, const double et) const {

@@ -142,7 +142,7 @@ These kernels will be loaded by SPICE through a meta-kernel. The following conte
 
 ## Compilation
 
-The orbital propagator is based on Eigen, boost and CSPICE. These libraries should be downloaded and installed before compiling the orbital propagator. An example of CMakeLists.txt file is shown below, assuming that the libraries are located in `/usr/local/` and `orbital_propagator/libs`:
+The orbital propagator is based on boost and CSPICE. These libraries should be downloaded and installed before compiling the orbital propagator. An example of CMakeLists.txt file is shown below, assuming that the libraries are located in `/usr/local/` and `orbital_propagator/libs`:
 
 ```cmake
 cmake_minimum_required(VERSION 3.14)
@@ -152,7 +152,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 set(PROJECT_SOURCE_DIR "<ORBITAL_PROPAGATOR_ROOT_DIR>")
 
-include_directories(. /usr/local/boost_1_72_0 /usr/local/eigen-3.3.7 /usr/local/cspice/include ../libs/earthGRAM2016/src)
+include_directories(. /usr/local/boost_1_72_0 /usr/local/cspice/include ../libs/earthGRAM2016/src)
 
 add_library(libearthGRAM2016 STATIC IMPORTED)
 set_target_properties(libearthGRAM2016 PROPERTIES

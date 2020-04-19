@@ -7,7 +7,6 @@
 
 #include <string>
 #include <array>
-#include <Eigen/Dense>
 #include <iostream>
 #include "EnvironmentModel.h"
 #include "Body.h"
