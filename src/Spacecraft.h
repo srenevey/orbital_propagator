@@ -9,6 +9,7 @@
 #include <fstream>
 #include "StateVector.h"
 #include "Sensor.h"
+#include "dimensions/Dimensions.h"
 #include "algebra/Vector.h"
 #include "algebra/Matrix.h"
 
@@ -41,7 +42,7 @@ public:
     Spacecraft(
             const std::string& name,
             const StateVector& initial_state,
-            double mass,
+            Dimension::Mass mass,
             double drag_coefficient,
             std::vector<double> specular_reflection,
             std::vector<double> diffuse_reflection,
@@ -54,7 +55,7 @@ public:
 
     [[nodiscard]] std::string name() const;
     [[nodiscard]] StateVector state() const;
-    [[nodiscard]] double mass() const;
+    [[nodiscard]] Dimension::Mass mass() const;
     [[nodiscard]] double drag_coefficient() const;
     [[nodiscard]] std::vector<double> specular_reflection_coeff() const;
     [[nodiscard]] std::vector<double> diffuse_reflection_coeff() const;
@@ -76,7 +77,7 @@ public:
 
 private:
     std::string m_name; /*!< Name of the spacecraft, used to save data. */
-    double m_wet_mass; /*!< Wet mass (kg). */
+    Dimension::Mass m_wet_mass; /*!< Wet mass (kg). */
     StateVector m_state; /*!< State composed of 13 elements. */
     double m_drag_coefficient; /*!< Drag coefficient. */
     std::vector<double> m_specular_reflection; /*!< Specular reflection coefficient. */

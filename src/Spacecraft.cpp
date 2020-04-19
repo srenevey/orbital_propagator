@@ -17,7 +17,7 @@ Spacecraft::Spacecraft():
 Spacecraft::Spacecraft(
         const std::string& name,
         const StateVector& initial_state,
-        double mass,
+        Dimension::Mass mass,
         double drag_coefficient,
         std::vector<double> specular_reflection,
         std::vector<double> diffuse_reflection,
@@ -55,7 +55,7 @@ void Spacecraft::set_state(const StateVector& state) {
     m_state = state;
 }
 
-double Spacecraft::mass() const {
+Dimension::Mass Spacecraft::mass() const {
     return m_wet_mass;
 }
 

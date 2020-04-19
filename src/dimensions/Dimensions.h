@@ -12,5 +12,6 @@
 #include "Area.h"
 #include "Acceleration.h"
 #include "AngularAcceleration.h"
+#include "Mass.h"
 
 #endif //ORBITAL_PROPAGATOR_DIMENSIONS_H

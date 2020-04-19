@@ -33,7 +33,7 @@ int main() {
 
     // Model of a 1U CubeSat
     // Spacecraft are represented as a collection of N flat plates.
-    double mass = 1.33;
+    Dimension::Mass mass = 1.33_kg;
     Dimension::Distance side = 0.1_m;
     double I_ii = mass * side * side / 6.;
     Matrix3d inertia_matrix({{{I_ii, 0., 0.}, {0., I_ii, 0.}, {0., 0., I_ii}}});
